@@ -132,24 +132,98 @@ const T = {
     oilChangeSet:'حدد موعد تغيير الزيت', milesRemaining:'الأميال المتبقية',
     oilChangeWarning:'⚠️ موعد تغيير الزيت قريب!', oilChangeDue:'🚨 تغيير الزيت متأخر!',
     oilChangeOk:'✅ الزيت بحالة جيدة', totalMilesWeek:'إجمالي الأميال هذا الأسبوع',
+  },
+  ru: {
+    appSub:'— Финансы Дальнобойщика —', netProfit:'Чистая Прибыль — Эта Неделя',
+    grossIncome:'Валовой Доход', expenses:'Расходы', deductions:'Вычеты',
+    home:'Главная', loads:'Рейсы', expTab:'Расходы', history:'История', settings:'Настройки',
+    weekOpen:'📅 Текущая неделя открыта', closeWeek:'Закрыть Неделю',
+    totalIncome:'Общий Доход', totalExp:'Общие Расходы', loadsWeek:'Рейсов за Неделю',
+    deductBreak:'Детали Вычетов', recentLoads:'Последние Рейсы', seeAll:'Все',
+    noDeduct:'Вычеты не настроены', thisWeekLoads:'Рейсы Этой Недели', addLoad:'+ Добавить Рейс',
+    thisWeekExp:'Расходы Этой Недели', addExp:'+ Добавить Расход',
+    closedWeeks:'Закрытые Недели', noWeeks:'Нет закрытых недель',
+    companyInfo:'Информация о Компании', companyName:'Название Компании', shownReports:'В отчётах',
+    fixedDeduct:'Фиксированные Вычеты', companyCut:'% Компании', dispCarrier:'% Диспетчера',
+    driverPay:'% Водителя', pctGross:'% от валового дохода',
+    insurance:'Страховка ($/нед)', flatWeekly:'Фиксированная недельная плата',
+    otherDeduct:'Другие Вычеты ($/нед)', escrow:'Депозит / Обслуживание',
+    weekSettings:'Настройки Недели', weekStartsOn:'Начало недели',
+    days:['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'],
+    newWeek:'🔄 Новая Неделя', exportData:'📤 Экспорт JSON', exportPdf:'📄 Экспорт PDF', signOut:'🚪 Выйти',
+    version:'TruckLedger Pro v2.0 · Firebase · ☁️',
+    addLoadTitle:'Добавить Рейс', editLoadTitle:'Редактировать Рейс',
+    loadNum:'№ Рейса', rate:'Ставка ($)', origin:'Откуда', dest:'Куда',
+    mileage:'Миль', detention:'Простой ($)', layover:'Ночёвка ($)', notes:'Заметки',
+    saveLoad:'Сохранить Рейс', addExpTitle:'Добавить Расход', editExpTitle:'Редактировать Расход',
+    category:'Категория', amount:'Сумма ($)', date:'Дата', description:'Описание',
+    saveExp:'Сохранить Расход', weekSummary:'Итоги Недели',
+    noLoads:'Нет рейсов. Добавьте первый!', noExpenses:'Нет расходов',
+    noRecentLoads:'Нет рейсов за эту неделю', welcomeBack:'Добро пожаловать', createAccount:'Создать Аккаунт',
+    fullName:'Полное Имя', email:'Эл. Почта', password:'Пароль',
+    signIn:'Войти', createBtn:'Создать Аккаунт',
+    haveAccount:'Уже есть аккаунт?', noAccount:'Нет аккаунта?',
+    signInLink:'Войти', createLink:'Создать',
+    compPct:'% Компании', drvPct:'% Водителя', insLabel:'Страховка (неделя)', othLabel:'Другое / Депозит',
+    week:'Неделя', income:'Доход',
+    settingsSaved:'Настройки сохранены ✓', loadAdded:'Рейс добавлен ✓', loadUpdated:'Рейс обновлён ✓',
+    loadDeleted:'Рейс удалён', expAdded:'Расход добавлен ✓', expUpdated:'Расход обновлён ✓',
+    expDeleted:'Расход удалён', deleteLoad:'Удалить этот рейс?', deleteExp:'Удалить этот расход?',
+    closeWeekConfirm:'Закрыть текущую неделю? Она будет в истории.',
+    newWeekConfirm:'Архивировать неделю и начать новую?', signOutConfirm:'Выйти из системы?',
+    fillLoad:'⚠️ Заполните №, Откуда, Куда и Ставку', fillAmount:'⚠️ Введите корректную сумму',
+    fillFields:'Заполните все поля', pass6:'Пароль минимум 6 символов',
+    enterEmail:'Введите почту и пароль', langBtn:'🇷🇺 RU',
+    fuel:'⛽ Топливо', tolls:'🛣️ Платные дороги', equipment:'🔧 Аренда оборудования',
+    food:'🍔 Питание', misc:'📌 Разное',
+    oilChangeTitle:'🔧 Замена Масла', oilChangeMiles:'Миль до замены масла',
+    oilChangeDone:'Пройдено с последней замены', oilChangeReset:'✅ Масло заменено! Сбросить',
+    oilChangeSet:'Укажите интервал замены масла', milesRemaining:'Осталось миль',
+    oilChangeWarning:'⚠️ Скоро менять масло!', oilChangeDue:'🚨 Замена масла просрочена!',
+    oilChangeOk:'✅ Масло в норме', totalMilesWeek:'Всего миль за неделю',
+    forgotPassword:'Забыли пароль?', resetPassword:'Сбросить пароль',
+    resetEmailSent:'✅ Письмо отправлено! Проверьте почту.', resetEmailError:'Не удалось отправить письмо.',
+    backToLogin:'← Назад', enterEmailReset:'Введите почту для сброса пароля',
+    odoTitle:'🛣️ Одометр', odoMiles:'Всего миль пройдено', odoChallenge:'Вызов Миллион Миль',
+    odoProgress:'Прогресс до 1,000,000 миль', odoKeepGoing:'Продолжай ехать!',
+    odoHalfway:'Половина пути!', odoAlmost:'Почти финиш!', odoComplete:'🏆 МИЛЛИОН МИЛЬ!',
+    odoSince:'С момента регистрации',
   }
 };
 
 const t = k => T[currentLang][k] || T.en[k] || k;
 
-window.switchLang = () => {
-  currentLang = currentLang === 'en' ? 'ar' : 'en';
+window.switchLang = (lang) => {
+  if (lang) currentLang = lang;
   localStorage.setItem('tl_lang', currentLang);
   const isAr = currentLang === 'ar';
   document.documentElement.lang = currentLang;
-  document.documentElement.dir = isAr ? 'rtl' : 'ltr';
-  // Update ALL lang buttons on page
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.textContent = isAr ? '🇺🇸 EN' : '🇸🇦 عر';
-  });
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  // Close all dropdowns
+  document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.remove('open'));
+  updateLangButtons();
   renderAll();
   applyStaticTranslations();
 };
+
+function updateLangButtons() {
+  const flags = { en:'🇺🇸 EN', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
+  document.querySelectorAll('.lang-current').forEach(el => {
+    el.textContent = flags[currentLang] || '🇺🇸 EN';
+  });
+}
+
+window.toggleLangDropdown = (e) => {
+  e.stopPropagation();
+  document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.toggle('open'));
+};
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.lang-dropdown-wrap')) {
+    document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.remove('open'));
+  }
+});
+
 
 function applyStaticTranslations() {
   const isAr = currentLang === 'ar';
@@ -315,7 +389,7 @@ function firebaseErrMsg(code) {
     'auth/invalid-credential': currentLang==='ar'?'بريد أو كلمة مرور غير صحيحة':'Invalid email or password',
     'auth/too-many-requests': currentLang==='ar'?'محاولات كثيرة، حاول لاحقاً':'Too many attempts',
   };
-  return m[code] || (currentLang==='ar'?'حدث خطأ، حاول مرة أخرى':'Something went wrong');
+  return m[code] || (currentLang==='ar'?'حدث خطأ، حاول مرة أخرى':currentLang==='ru'?'Что-то пошло не так':'Something went wrong');
 }
 
 function showAuth() {
@@ -1236,6 +1310,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .topbar-right{display:flex;align-items:center;gap:6px;}
 .week-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);}
 .lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--accent);cursor:pointer;font-weight:700;}
+.lang-dropdown-wrap{position:relative;display:inline-block;}
+.lang-dropdown{display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:110px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden;}
+[dir="rtl"] .lang-dropdown{right:auto;left:0;}
+.lang-dropdown.open{display:block;}
+.lang-option{padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px;}
+.lang-option:hover{background:var(--surface2);}
+.lang-option.active{color:var(--accent);}
 .user-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px;max-width:100px;overflow:hidden;}
 #profit-hero{background:linear-gradient(135deg,#0f1d35 0%,#0A0F1E 100%);border-bottom:1px solid var(--border);padding:16px;flex-shrink:0;}
 .profit-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);margin-bottom:4px;}
@@ -1324,7 +1405,14 @@ select.form-input{appearance:none;}
 <div id="screen-auth" style="display:none">
   <div class="auth-box">
     <div style="text-align:right;margin-bottom:12px">
-      <button id="lang-btn" class="lang-btn" onclick="switchLang()">🇸🇦 عر</button>
+      <div class="lang-dropdown-wrap">
+        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
+        <div class="lang-dropdown">
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
+        </div>
+      </div>
     </div>
     <div class="auth-logo">
       <div class="logo-icon">🚛</div>
@@ -1371,7 +1459,14 @@ select.form-input{appearance:none;}
       <div class="company" id="company-display">— Owner Operator Pro —</div>
     </div>
     <div class="topbar-right">
-      <button id="lang-btn" class="lang-btn" onclick="switchLang()">🇸🇦 عر</button>
+      <div class="lang-dropdown-wrap">
+        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
+        <div class="lang-dropdown">
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
+        </div>
+      </div>
       <div class="week-badge" id="week-badge">Week 1</div>
       <div class="user-btn" onclick="doLogout()">👤 <span id="user-name-display" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;"></span></div>
     </div>
@@ -1591,8 +1686,9 @@ select.form-input{appearance:none;}
   const lang = localStorage.getItem('tl_lang') || 'en';
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.textContent = lang === 'ar' ? '🇺🇸 EN' : '🇸🇦 عر';
+  const flags = { en:'🇺🇸 EN', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
+  document.querySelectorAll('.lang-current').forEach(el => {
+    el.textContent = flags[lang] || '🇺🇸 EN';
   });
 })();
 
