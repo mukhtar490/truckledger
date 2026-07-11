@@ -774,9 +774,9 @@ function renderDriverPay(data) {
   const lg = document.getElementById('lbl-gross-base');
   const lp = document.getElementById('lbl-driver-pct-label');
   if (lbw) lbw.textContent = t('driverPayWeek');
-  if (lbc) lbc.textContent = t('driverPayCalc');
+  if (lbc) lbc.textContent = currentLang==='ar' ? 'نسبة السائق: ' + driverPct + '% من إجمالي الدخل' : currentLang==='ru' ? 'Ставка: ' + driverPct + '% от валового дохода' : driverPct + '% of gross income';
   if (lg) lg.textContent = t('grossIncome');
-  if (lp) lp.textContent = t('driverPay');
+  if (lp) lp.textContent = currentLang==='ar' ? 'نسبة السائق' : currentLang==='ru' ? 'Ставка водителя' : 'Driver %';
 }
 
 async function renderAll() {
