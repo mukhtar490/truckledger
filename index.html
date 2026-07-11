@@ -181,7 +181,7 @@ const T = {
     oilChangeSet:'Укажите интервал замены масла', milesRemaining:'Осталось миль',
     oilChangeWarning:'⚠️ Скоро менять масло!', oilChangeDue:'🚨 Замена масла просрочена!',
     oilChangeOk:'✅ Масло в норме', totalMilesWeek:'Всего миль за неделю',
-    forgotPassword:'Забыли пароль?', resetPassword:'Сбросить пароль',
+    driverPaySection:'💰 Зарплата Водителя', driverPayWeek:'Зарплата за Неделю', driverPayCalc:'На основе % от валового дохода', driverPayEmpty:'Укажите % водителя в настройках', forgotPassword:'Забыли пароль?', resetPassword:'Сбросить пароль',
     resetEmailSent:'✅ Письмо отправлено! Проверьте почту.', resetEmailError:'Не удалось отправить письмо.',
     backToLogin:'← Назад', enterEmailReset:'Введите почту для сброса пароля',
     odoTitle:'🛣️ Одометр', odoMiles:'Всего миль пройдено', odoChallenge:'Вызов Миллион Миль',
@@ -748,6 +748,37 @@ function renderOilChange() {
 }
 
 // ── RENDER ──
+function renderDriverPay(data) {
+  const card = document.getElementById('driver-pay-card');
+  if (!card) return;
+
+  const driverPct = settings.driverPct || 0;
+
+  if (driverPct <= 0) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+  const driverPay = data.grossIncome * (driverPct / 100);
+
+  // Update values
+  document.getElementById('driver-pay-amount').textContent = fmt(driverPay);
+  document.getElementById('driver-pay-pct-badge').textContent = driverPct + '%';
+  document.getElementById('driver-pay-gross').textContent = fmt(data.grossIncome);
+  document.getElementById('driver-pay-pct-val').textContent = driverPct + '%';
+
+  // Update labels
+  const lbw = document.getElementById('lbl-driver-pay-week');
+  const lbc = document.getElementById('lbl-driver-pay-calc');
+  const lg = document.getElementById('lbl-gross-base');
+  const lp = document.getElementById('lbl-driver-pct-label');
+  if (lbw) lbw.textContent = t('driverPayWeek');
+  if (lbc) lbc.textContent = t('driverPayCalc');
+  if (lg) lg.textContent = t('grossIncome');
+  if (lp) lp.textContent = t('driverPay');
+}
+
 async function renderAll() {
   if (!currentWeekId) return;
   const data = await calcWeek(currentWeekId);
@@ -790,6 +821,7 @@ function renderHome(data) {
   document.getElementById('lbl-deduct-break').textContent = t('deductBreak');
   document.getElementById('lbl-recent-loads').textContent = t('recentLoads');
   document.getElementById('btn-see-all').textContent = t('seeAll');
+  renderDriverPay(data);
 
   const rl = document.getElementById('home-recent-loads');
   const recent = [...data.loads].slice(-3).reverse();
@@ -1719,6 +1751,30 @@ select.form-input{appearance:none;}
         <div class="sum-box deduct"><div class="sl" id="lbl-sum-deduct">Deductions</div><div class="sv" id="sum-deductions">$0.00</div></div>
         <div class="sum-box"><div class="sl" id="lbl-sum-loads">Loads This Week</div><div class="sv" id="sum-loads">0</div></div>
       </div>
+      <!-- DRIVER PAY CARD -->
+      <div id="driver-pay-card" style="display:none;margin-bottom:12px">
+        <div class="card" style="background:linear-gradient(135deg,#0d2b1f,#0f1d14);border-color:#1a4a30">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#6ee7a0;font-weight:700" id="lbl-driver-pay-week">Driver Pay This Week</div>
+              <div style="font-size:10px;color:#9CA3AF;margin-top:2px" id="lbl-driver-pay-calc">Based on % of gross income</div>
+            </div>
+            <div style="background:#0d2b1f;border:1px solid #1a4a30;border-radius:20px;padding:3px 10px;font-size:11px;color:#10B981;font-weight:700" id="driver-pay-pct-badge">0%</div>
+          </div>
+          <div style="font-size:38px;font-weight:900;color:#10B981;letter-spacing:-1px;line-height:1" id="driver-pay-amount">$0.00</div>
+          <div style="margin-top:10px;background:rgba(16,185,129,0.1);border-radius:8px;padding:8px 10px">
+            <div style="display:flex;justify-content:space-between;font-size:12px">
+              <span style="color:#9CA3AF" id="lbl-gross-base">Gross Income</span>
+              <span style="color:#F9FAFB;font-weight:700" id="driver-pay-gross">$0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px">
+              <span style="color:#9CA3AF" id="lbl-driver-pct-label">Driver %</span>
+              <span style="color:#10B981;font-weight:700" id="driver-pay-pct-val">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="sec-header">
         <div class="sec-title" id="lbl-deduct-break">Deductions Breakdown</div>
       </div>
