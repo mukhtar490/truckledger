@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0A0F1E">
 <title>TruckLedger Pro</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
@@ -181,7 +182,7 @@ const T = {
     oilChangeSet:'Укажите интервал замены масла', milesRemaining:'Осталось миль',
     oilChangeWarning:'⚠️ Скоро менять масло!', oilChangeDue:'🚨 Замена масла просрочена!',
     oilChangeOk:'✅ Масло в норме', totalMilesWeek:'Всего миль за неделю',
-    driverPaySection:'💰 Зарплата Водителя', driverPayWeek:'Зарплата за Неделю', driverPayCalc:'На основе % от валового дохода', driverPayEmpty:'Укажите % водителя в настройках', forgotPassword:'Забыли пароль?', resetPassword:'Сбросить пароль',
+    rpm:'Доход/Миля', rpmFull:'Доход за Милю', rpmTitle:'⚡ Доход за Милю', rpmNoMiles:'Нет данных о милях', monthlyTitle:'📆 Месячный Отчёт', monthlyIncome:'Доход за Месяц', monthlyExpenses:'Расходы за Месяц', monthlyProfit:'Чистая Прибыль', monthlyLoads:'Всего Рейсов', weeksComparison:'📊 Сравнение Недель', thisWeek:'Эта Неделя', lastWeek:'Прошлая Неделя', excelExport:'📊 Экспорт Excel', driverPaySection:'💰 Зарплата Водителя', driverPayWeek:'Зарплата за Неделю', driverPayCalc:'На основе % от валового дохода', driverPayEmpty:'Укажите % водителя в настройках', forgotPassword:'Забыли пароль?', resetPassword:'Сбросить пароль',
     resetEmailSent:'✅ Письмо отправлено! Проверьте почту.', resetEmailError:'Не удалось отправить письмо.',
     backToLogin:'← Назад', enterEmailReset:'Введите почту для сброса пароля',
     odoTitle:'🛣️ Одометр', odoMiles:'Всего миль пройдено', odoChallenge:'Вызов Миллион Миль',
@@ -307,6 +308,8 @@ function applyStaticTranslations() {
   if (pmls[2]) pmls[2].textContent = t('deductions');
   // Tabs
   const tabData = [['tab-home','🏠','home'],['tab-loads','📦','loads'],['tab-expenses','💸','expTab'],['tab-history','📅','history'],['tab-settings','⚙️','settings']];
+  const analyticTabLbl = document.getElementById('tab-analytics-label');
+  if (analyticTabLbl) analyticTabLbl.textContent = currentLang==='ar'?'شهري':currentLang==='ru'?'Месяц':'Monthly';
   tabData.forEach(([id,icon,key]) => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = `<span class="tab-icon">${icon}</span>${t(key)}`;
@@ -813,6 +816,64 @@ function renderOilChange() {
 }
 
 // ── RENDER ──
+function renderRPM(data) {
+  const totalMiles = data.loads.reduce((s,l)=>s+(l.miles||0),0);
+  const rpm = totalMiles > 0 ? data.grossIncome / totalMiles : 0;
+  const el = document.getElementById('rpm-value');
+  const mEl = document.getElementById('rpm-miles-val');
+  const titleEl = document.getElementById('lbl-rpm-title');
+  const milesLbl = document.getElementById('lbl-rpm-miles');
+  if (el) el.textContent = totalMiles > 0 ? '$' + rpm.toFixed(2) : '—';
+  if (mEl) mEl.textContent = totalMiles.toLocaleString('en-US') + ' mi';
+  if (titleEl) titleEl.textContent = t('rpmTitle');
+  if (milesLbl) milesLbl.textContent = currentLang==='ar'?'إجمالي الأميال':currentLang==='ru'?'Всего Миль':'Total Miles';
+}
+
+async function renderComparison(data) {
+  const compLbl = document.getElementById('lbl-comparison');
+  const twLbl = document.getElementById('lbl-this-week');
+  const lwLbl = document.getElementById('lbl-last-week');
+  if (compLbl) compLbl.textContent = t('weeksComparison');
+  if (twLbl) twLbl.textContent = t('thisWeek');
+  if (lwLbl) lwLbl.textContent = t('lastWeek');
+
+  const thisNet = data.net;
+  document.getElementById('compare-this').textContent = fmt(thisNet);
+  document.getElementById('compare-this').style.color = thisNet >= 0 ? 'var(--accent2)' : 'var(--danger)';
+
+  // Get last week
+  try {
+    const snap = await getDocs(weeksRef());
+    const weeks = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.weekNum-a.weekNum);
+    const closedWeeks = weeks.filter(w=>w.status==='closed');
+    if (closedWeeks.length > 0) {
+      const lastWeek = closedWeeks[0];
+      const lastData = await calcWeek(lastWeek.id);
+      const lastNet = lastData.net;
+      document.getElementById('compare-last').textContent = fmt(lastNet);
+      document.getElementById('compare-last').style.color = lastNet >= 0 ? 'var(--accent2)' : 'var(--danger)';
+
+      // Bar comparison
+      const bar = document.getElementById('comparison-bar');
+      const barFill = document.getElementById('compare-bar-fill');
+      const diffEl = document.getElementById('compare-diff');
+      if (bar && barFill && diffEl) {
+        bar.style.display = 'block';
+        const max = Math.max(Math.abs(thisNet), Math.abs(lastNet), 1);
+        const pct = Math.min(Math.abs(thisNet) / max * 100, 100);
+        barFill.style.width = pct + '%';
+        barFill.style.background = thisNet >= lastNet ? 'var(--accent2)' : 'var(--danger)';
+        const diff = thisNet - lastNet;
+        const arrow = diff >= 0 ? '▲' : '▼';
+        const color = diff >= 0 ? 'var(--accent2)' : 'var(--danger)';
+        diffEl.innerHTML = `<span style="color:${color}">${arrow} ${fmt(Math.abs(diff))} ${currentLang==='ar'?'عن الأسبوع الماضي':currentLang==='ru'?'по сравнению с прошлой неделей':'vs last week'}</span>`;
+      }
+    } else {
+      document.getElementById('compare-last').textContent = '—';
+    }
+  } catch(e) { console.error(e); }
+}
+
 function renderDriverPay(data) {
   const card = document.getElementById('driver-pay-card');
   if (!card) return;
@@ -887,6 +948,8 @@ function renderHome(data) {
   document.getElementById('lbl-recent-loads').textContent = t('recentLoads');
   document.getElementById('btn-see-all').textContent = t('seeAll');
   renderDriverPay(data);
+  renderRPM(data);
+  renderComparison(data).catch(()=>{});
 
   const rl = document.getElementById('home-recent-loads');
   const recent = [...data.loads].slice(-3).reverse();
@@ -1297,6 +1360,135 @@ window.showWeekDetail = async wId => {
 };
 
 // ── TABS ──
+async function renderMonthly() {
+  const el = document.getElementById('monthly-content');
+  if (!el) return;
+
+  const isAr = currentLang === 'ar';
+  const isRu = currentLang === 'ru';
+
+  try {
+    const snap = await getDocs(weeksRef());
+    const allWeeks = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+    // Group by month
+    const months = {};
+    for (const w of allWeeks) {
+      const date = w.startDate?.toDate ? w.startDate.toDate() : new Date();
+      const key = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0');
+      const label = date.toLocaleDateString(isAr?'ar-SA':isRu?'ru-RU':'en-US', {year:'numeric',month:'long'});
+      if (!months[key]) months[key] = {label, weeks:[], income:0, expenses:0, net:0, loads:0};
+      months[key].weeks.push(w);
+    }
+
+    // Calculate each month
+    for (const key of Object.keys(months)) {
+      for (const w of months[key].weeks) {
+        const data = await calcWeek(w.id);
+        months[key].income += data.grossIncome;
+        months[key].expenses += data.totalExpenses;
+        months[key].net += data.net;
+        months[key].loads += data.loads.length;
+      }
+    }
+
+    const sortedKeys = Object.keys(months).sort().reverse();
+
+    if (!sortedKeys.length) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📆</div><div class="empty-text">${isAr?'لا توجد بيانات بعد':isRu?'Нет данных':'No data yet'}</div></div>`;
+      return;
+    }
+
+    let html = '';
+    for (const key of sortedKeys) {
+      const m = months[key];
+      const netColor = m.net >= 0 ? 'var(--accent2)' : 'var(--danger)';
+      html += `<div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:15px;font-weight:800">${m.label}</div>
+          <div style="font-size:18px;font-weight:900;color:${netColor}">${fmt(m.net)}</div>
+        </div>
+        <div class="sum-grid" style="margin-bottom:0">
+          <div class="sum-box income">
+            <div class="sl">${t('monthlyIncome')}</div>
+            <div class="sv" style="font-size:14px">${fmt(m.income)}</div>
+          </div>
+          <div class="sum-box expense">
+            <div class="sl">${t('monthlyExpenses')}</div>
+            <div class="sv" style="font-size:14px;color:var(--danger)">${fmt(m.expenses)}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">
+          <span>${t('monthlyLoads')}: <strong style="color:var(--text)">${m.loads}</strong></span>
+          <span>${isAr?'أسابيع':isRu?'Недели':'Weeks'}: <strong style="color:var(--text)">${m.weeks.length}</strong></span>
+          <button class="btn btn-ghost btn-sm" onclick="exportMonthlyPDF('${key}','${m.label}')">📄 PDF</button>
+        </div>
+      </div>`;
+    }
+    el.innerHTML = html;
+
+    // Update tab label
+    document.getElementById('lbl-monthly-title').textContent = t('monthlyTitle');
+
+  } catch(e) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Error loading data</div></div>`;
+    console.error(e);
+  }
+}
+
+window.exportMonthlyPDF = async (monthKey, monthLabel) => {
+  const isAr = currentLang === 'ar';
+  const snap = await getDocs(weeksRef());
+  const allWeeks = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const monthWeeks = allWeeks.filter(w => {
+    const date = w.startDate?.toDate ? w.startDate.toDate() : new Date();
+    const key = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0');
+    return key === monthKey;
+  });
+
+  let totalIncome=0, totalExp=0, totalNet=0, totalLoads=0;
+  for (const w of monthWeeks) {
+    const data = await calcWeek(w.id);
+    totalIncome += data.grossIncome;
+    totalExp += data.totalExpenses;
+    totalNet += data.net;
+    totalLoads += data.loads.length;
+  }
+
+  const company = settings.companyName || 'TruckLedger Pro';
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>${company} - ${monthLabel}</title>
+  <style>body{font-family:Arial,sans-serif;padding:32px;color:#1e293b;}
+  .header{background:#0A0F1E;color:#fff;padding:24px;border-radius:12px;margin-bottom:24px;}
+  .title{font-size:22px;font-weight:900;color:#F59E0B;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+  .box{padding:16px;border-radius:10px;border:1px solid #e2e8f0;}
+  .box .l{font-size:11px;text-transform:uppercase;color:#64748b;margin-bottom:4px;}
+  .box .v{font-size:20px;font-weight:800;}
+  .green{color:#059669;}.red{color:#DC2626;}.gold{color:#D97706;}
+  @media print{body{padding:16px;}}</style></head>
+  <body>
+  <div class="header">
+    <div class="title">🚛 ${company}</div>
+    <div style="color:#9CA3AF;margin-top:4px">${isAr?'التقرير الشهري':'Monthly Report'} — ${monthLabel}</div>
+    <div style="font-size:28px;font-weight:900;color:${totalNet>=0?'#10B981':'#EF4444'};margin-top:12px">${fmt(totalNet)}</div>
+  </div>
+  <div class="grid">
+    <div class="box"><div class="l">${isAr?'الدخل الإجمالي':'Gross Income'}</div><div class="v green">${fmt(totalIncome)}</div></div>
+    <div class="box"><div class="l">${isAr?'المصاريف':'Expenses'}</div><div class="v red">${fmt(totalExp)}</div></div>
+    <div class="box"><div class="l">${isAr?'إجمالي الرحلات':'Total Loads'}</div><div class="v">${totalLoads}</div></div>
+    <div class="box"><div class="l">${isAr?'عدد الأسابيع':'Weeks'}</div><div class="v">${monthWeeks.length}</div></div>
+  </div>
+  <div style="text-align:center;color:#94a3b8;font-size:12px;margin-top:24px">TruckLedger Pro · by Mukhtar</div>
+  <script>window.onload=()=>window.print()<\/script>
+  </body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+};
+
 window.switchTab = name => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -1307,6 +1499,7 @@ window.switchTab = name => {
   if (name==='loads') { fab.style.display='flex'; fab.onclick=()=>openLoadModal(); }
   else if (name==='expenses') { fab.style.display='flex'; fab.onclick=()=>openExpenseModal(); }
   else fab.style.display='none';
+  if (name==='analytics') renderMonthly().catch(()=>{});
 };
 
 window.closeModal = id => document.getElementById(id).classList.remove('open');
@@ -1322,6 +1515,79 @@ window.showToast = msg => {
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'),2500);
+};
+
+window.exportExcel = async () => {
+  showToast(currentLang==='ar'?'جاري تجهيز Excel...':currentLang==='ru'?'Подготовка Excel...':'Preparing Excel...');
+  try {
+    const snap = await getDocs(weeksRef());
+    const allWeeks = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.weekNum-b.weekNum);
+
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Summary
+    const summaryData = [
+      ['TruckLedger Pro - ' + (settings.companyName||'Report')],
+      ['Generated', new Date().toLocaleDateString()],
+      [],
+      ['Week', 'Gross Income', 'Expenses', 'Deductions', 'Net Profit', 'Loads', 'Miles', 'RPM'],
+    ];
+
+    let totalIncome=0, totalExp=0, totalNet=0, totalLoads=0;
+
+    for (const w of allWeeks) {
+      const data = await calcWeek(w.id);
+      const totalMiles = data.loads.reduce((s,l)=>s+(l.miles||0),0);
+      const rpm = totalMiles > 0 ? (data.grossIncome/totalMiles).toFixed(2) : 0;
+      summaryData.push([
+        'Week ' + w.weekNum,
+        data.grossIncome, data.totalExpenses, data.totalDeductions, data.net,
+        data.loads.length, totalMiles, parseFloat(rpm)
+      ]);
+      totalIncome += data.grossIncome;
+      totalExp += data.totalExpenses;
+      totalNet += data.net;
+      totalLoads += data.loads.length;
+    }
+
+    summaryData.push([]);
+    summaryData.push(['TOTAL', totalIncome, totalExp, '', totalNet, totalLoads]);
+
+    const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+    ws1['!cols'] = [{wch:12},{wch:14},{wch:12},{wch:13},{wch:12},{wch:8},{wch:10},{wch:8}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Summary');
+
+    // Sheet 2: All Loads
+    const loadsData = [['Week', 'Load #', 'Origin', 'Destination', 'Rate', 'Detention', 'Layover', 'Total', 'Miles', 'Notes']];
+    for (const w of allWeeks) {
+      const data = await calcWeek(w.id);
+      for (const l of data.loads) {
+        const gross = (l.rate||0)+(l.detention||0)+(l.layover||0);
+        loadsData.push(['Week '+w.weekNum, l.loadNumber||'', l.origin||'', l.destination||'', l.rate||0, l.detention||0, l.layover||0, gross, l.miles||0, l.notes||'']);
+      }
+    }
+    const ws2 = XLSX.utils.aoa_to_sheet(loadsData);
+    ws2['!cols'] = [{wch:10},{wch:10},{wch:15},{wch:15},{wch:10},{wch:10},{wch:10},{wch:10},{wch:8},{wch:20}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Loads');
+
+    // Sheet 3: All Expenses
+    const expData = [['Week', 'Category', 'Amount', 'Date', 'Description']];
+    for (const w of allWeeks) {
+      const data = await calcWeek(w.id);
+      for (const e of data.expenses) {
+        expData.push(['Week '+w.weekNum, e.category||'', e.amount||0, e.date||'', e.description||'']);
+      }
+    }
+    const ws3 = XLSX.utils.aoa_to_sheet(expData);
+    ws3['!cols'] = [{wch:10},{wch:18},{wch:10},{wch:12},{wch:25}];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Expenses');
+
+    XLSX.writeFile(wb, 'TruckLedger_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    showToast(currentLang==='ar'?'✅ تم تصدير Excel':currentLang==='ru'?'✅ Excel экспортирован':'✅ Excel exported!');
+  } catch(e) {
+    console.error(e);
+    showToast('Error exporting Excel');
+  }
 };
 
 window.exportData = async () => {
@@ -1816,6 +2082,7 @@ select.form-input{appearance:none;}
     <div class="tab" onclick="switchTab('loads')" id="tab-loads"><span class="tab-icon">📦</span>Loads</div>
     <div class="tab" onclick="switchTab('expenses')" id="tab-expenses"><span class="tab-icon">💸</span>Expenses</div>
     <div class="tab" onclick="switchTab('history')" id="tab-history"><span class="tab-icon">📅</span>History</div>
+    <div class="tab" onclick="switchTab('analytics')" id="tab-analytics"><span class="tab-icon">📆</span><span id="tab-analytics-label">Monthly</span></div>
     <div class="tab" onclick="switchTab('settings')" id="tab-settings"><span class="tab-icon">⚙️</span>Settings</div>
   </div>
 
@@ -1853,6 +2120,41 @@ select.form-input{appearance:none;}
               <span style="color:#10B981;font-weight:700" id="driver-pay-pct-val">0%</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- RPM CARD -->
+      <div class="card" id="rpm-card" style="margin-bottom:12px;background:linear-gradient(135deg,#1a1a2e,#16213e);border-color:#2a2a5a">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#818cf8;font-weight:700" id="lbl-rpm-title">⚡ Revenue Per Mile</div>
+            <div style="font-size:32px;font-weight:900;color:#a5b4fc;letter-spacing:-1px;margin-top:4px" id="rpm-value">$0.00</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:#9CA3AF" id="lbl-rpm-miles">Total Miles</div>
+            <div style="font-size:18px;font-weight:800;color:#F9FAFB" id="rpm-miles-val">0 mi</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WEEKLY COMPARISON CARD -->
+      <div class="card" id="comparison-card" style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px" id="lbl-comparison">📊 Weekly Comparison</div>
+        <div style="display:flex;gap:12px">
+          <div style="flex:1;background:var(--surface2);border-radius:10px;padding:10px;border:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px" id="lbl-this-week">This Week</div>
+            <div style="font-size:16px;font-weight:800" id="compare-this">$0.00</div>
+          </div>
+          <div style="flex:1;background:var(--surface2);border-radius:10px;padding:10px;border:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px" id="lbl-last-week">Last Week</div>
+            <div style="font-size:16px;font-weight:800" id="compare-last">$0.00</div>
+          </div>
+        </div>
+        <div id="comparison-bar" style="margin-top:10px;display:none">
+          <div style="height:6px;background:var(--surface2);border-radius:10px;overflow:hidden;margin-bottom:4px">
+            <div id="compare-bar-fill" style="height:100%;border-radius:10px;transition:width 0.5s"></div>
+          </div>
+          <div style="font-size:11px;font-weight:700;text-align:center" id="compare-diff"></div>
         </div>
       </div>
 
@@ -1906,6 +2208,16 @@ select.form-input{appearance:none;}
     <div class="panel" id="panel-history">
       <div class="sec-header"><div class="sec-title" id="lbl-closed-weeks">Closed Weeks</div></div>
       <div id="history-list"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="panel" id="panel-analytics">
+      <div class="sec-header">
+        <div class="sec-title" id="lbl-monthly-title">📆 Monthly Report</div>
+      </div>
+      <div id="monthly-content">
+        <div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Loading...</div></div>
+      </div>
     </div>
 
     <!-- SETTINGS -->
