@@ -374,8 +374,11 @@ function applyStaticTranslations() {
   // Update week badge language
   const wb = document.getElementById('week-badge');
   if (wb) {
-    const currentText = wb.textContent.replace(/[^0-9]/g,'');
-    if (currentText) wb.textContent = t('week') + ' ' + currentText + ' ▾';
+    const wNum = wb.textContent.replace(/[^0-9]/g,'');
+    if (wNum) {
+      const wLbl = currentLang==='ar'?'س':currentLang==='ru'?'Н':'W';
+      wb.textContent = wLbl + wNum + ' ▾';
+    }
   }
   } catch(e) { console.error('Translation error:', e); }
 }
@@ -491,7 +494,8 @@ function showAuth() {
 function showApp() {
   document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('screen-app').style.display = 'flex';
-  document.getElementById('user-name-display').textContent = currentUser?.displayName || currentUser?.email || 'User';
+  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
+  document.getElementById('user-name-display').textContent = displayName;
 }
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
@@ -566,7 +570,11 @@ async function ensureCurrentWeek() {
   }
   const all = await getDocs(weeksRef());
   const w = all.docs.find(d=>d.id===currentWeekId);
-  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
+  if (w) {
+    const wNum = w.data().weekNum;
+    const wLabel = currentLang==='ar'?'س':currentLang==='ru'?'Н':'W';
+    document.getElementById('week-badge').textContent = wLabel + wNum + ' ▾';
+  }
 }
 
 window.closeWeek = async () => {
@@ -577,7 +585,11 @@ window.closeWeek = async () => {
   currentWeekId = ref.id;
   const allN = await getDocs(weeksRef());
   const w = allN.docs.find(d=>d.id===currentWeekId);
-  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
+  if (w) {
+    const wNum = w.data().weekNum;
+    const wLabel = currentLang==='ar'?'س':currentLang==='ru'?'Н':'W';
+    document.getElementById('week-badge').textContent = wLabel + wNum + ' ▾';
+  }
   showToast('✓'); renderAll();
 };
 
