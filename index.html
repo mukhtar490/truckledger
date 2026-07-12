@@ -307,7 +307,7 @@ function applyStaticTranslations() {
   if (pmls[1]) pmls[1].textContent = t('expenses');
   if (pmls[2]) pmls[2].textContent = t('deductions');
   // Tabs
-  const tabData = [['tab-home','🏠','home'],['tab-loads','📦','loads'],['tab-expenses','💸','expTab'],['tab-history','📅','history'],['tab-settings','⚙️','settings']];
+  const tabData = [['tab-home','🏠','home'],['tab-loads','📦','loads'],['tab-expenses','💸','expTab'],['tab-history','📅','history']];
   const analyticTabLbl = document.getElementById('tab-analytics-label');
   if (analyticTabLbl) analyticTabLbl.textContent = currentLang==='ar'?'شهري':currentLang==='ru'?'Месяц':'Monthly';
   tabData.forEach(([id,icon,key]) => {
@@ -338,8 +338,6 @@ function applyStaticTranslations() {
   // Settings buttons
   const nb = document.getElementById('btn-new-week');
   if (nb) nb.textContent = t('newWeek');
-  const eb = document.getElementById('btn-export');
-  if (eb) eb.textContent = t('exportData');
   const epdf = document.getElementById('btn-export-pdf');
   if (epdf) epdf.textContent = t('exportPdf');
   const sob = document.getElementById('btn-signout');
@@ -1492,7 +1490,8 @@ window.exportMonthlyPDF = async (monthKey, monthLabel) => {
 window.switchTab = name => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById(`tab-${name}`).classList.add('active');
+  const tabEl = document.getElementById(`tab-${name}`);
+  if (tabEl) tabEl.classList.add('active');
   document.getElementById(`panel-${name}`).classList.add('active');
   document.getElementById('content').scrollTop = 0;
   const fab = document.getElementById('global-fab');
@@ -1885,6 +1884,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .lang-option:hover{background:var(--surface2);}
 .lang-option.active{color:var(--accent);}
 .user-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px;max-width:100px;overflow:hidden;}
+.settings-btn{background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.2s;}
+.settings-btn:active{transform:rotate(45deg);color:var(--accent);}
 .tl-logo{width:28px;height:28px;border-radius:50%;background:#10B981;position:relative;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
 .tl-logo .inner{width:22px;height:22px;border-radius:50%;background:#0A0F1E;display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:2px 2px 3px;}
 .tl-logo .b1{width:4px;height:6px;background:#10B981;border-radius:1px 1px 0 0;}
@@ -2190,7 +2191,7 @@ select.form-input{appearance:none;}
     <div class="panel" id="panel-loads">
       <div class="sec-header">
         <div class="sec-title" id="lbl-week-loads">This Week's Loads</div>
-        <button class="btn btn-primary btn-sm" id="btn-add-load" onclick="openLoadModal()">+ Add Load</button>
+        <button class="btn btn-primary" id="btn-add-load" onclick="openLoadModal()" style="padding:10px 16px;font-size:13px">+ Add Load</button>
       </div>
       <div id="loads-list"></div>
     </div>
@@ -2199,7 +2200,7 @@ select.form-input{appearance:none;}
     <div class="panel" id="panel-expenses">
       <div class="sec-header">
         <div class="sec-title" id="lbl-week-exp">This Week's Expenses</div>
-        <button class="btn btn-primary btn-sm" id="btn-add-exp" onclick="openExpenseModal()">+ Add Expense</button>
+        <button class="btn btn-primary" id="btn-add-exp" onclick="openExpenseModal()" style="padding:10px 16px;font-size:13px">+ Add Expense</button>
       </div>
       <div id="expenses-list"></div>
     </div>
@@ -2267,7 +2268,6 @@ select.form-input{appearance:none;}
       </div>
       <div style="margin-top:8px">
         <button class="btn btn-primary btn-full" id="btn-export-pdf" onclick="exportPDF()" style="margin-bottom:8px">📄 Export PDF Report</button>
-        <button class="btn btn-ghost btn-full" id="btn-export" onclick="exportData()">📤 Export JSON (Backup)</button>
       </div>
       <div style="margin-top:8px">
         <button class="btn btn-ghost btn-full" id="btn-signout" onclick="doLogout()">🚪 Sign Out</button>
