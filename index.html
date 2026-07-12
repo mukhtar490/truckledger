@@ -2065,6 +2065,7 @@ select.form-input{appearance:none;}
         <div class="week-nav-dropdown" id="week-nav-dropdown"></div>
       </div>
       <div class="user-btn" onclick="doLogout()">👤 <span id="user-name-display" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;"></span></div>
+      <button class="settings-btn" onclick="switchTab('settings')">⚙️</button>
     </div>
   </div>
 
@@ -2084,7 +2085,6 @@ select.form-input{appearance:none;}
     <div class="tab" onclick="switchTab('expenses')" id="tab-expenses"><span class="tab-icon">💸</span>Expenses</div>
     <div class="tab" onclick="switchTab('history')" id="tab-history"><span class="tab-icon">📅</span>History</div>
     <div class="tab" onclick="switchTab('analytics')" id="tab-analytics"><span class="tab-icon">📊</span><span id="tab-analytics-label">Monthly</span></div>
-    <div class="tab" onclick="switchTab('settings')" id="tab-settings"><span class="tab-icon">⚙️</span>Settings</div>
   </div>
 
   <div id="content">
