@@ -213,6 +213,65 @@ function updateLangButtons() {
   });
 }
 
+// ── WEEK NAVIGATION ──
+window.toggleWeekDropdown = async (e) => {
+  e.stopPropagation();
+  const dd = document.getElementById('week-nav-dropdown');
+  if (dd.classList.contains('open')) {
+    dd.classList.remove('open');
+    return;
+  }
+  // Build week list
+  const snap = await getDocs(weeksRef());
+  const weeks = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.weekNum-a.weekNum);
+  const isAr = currentLang==='ar';
+  const isRu = currentLang==='ru';
+  const weekLabel = isAr?'أسبوع':isRu?'Неделя':'Week';
+  const openLabel = isAr?'مفتوح':isRu?'Открыта':'Open';
+  const closedLabel = isAr?'مغلق':isRu?'Закрыта':'Closed';
+
+  dd.innerHTML = weeks.map(w => {
+    const isOpen = w.status === 'open';
+    const isCurrent = w.id === currentWeekId;
+    return `<div class="week-nav-item ${isCurrent?'active':''}" onclick="navigateToWeek('${w.id}',${w.weekNum})">
+      <span>${weekLabel} ${w.weekNum}</span>
+      <span class="wni-badge ${isOpen?'wni-open':'wni-closed'}">${isOpen?openLabel:closedLabel}</span>
+    </div>`;
+  }).join('');
+
+  dd.classList.add('open');
+};
+
+window.navigateToWeek = async (wId, wNum) => {
+  document.getElementById('week-nav-dropdown').classList.remove('open');
+  const isAr = currentLang==='ar';
+  const isRu = currentLang==='ru';
+  const weekLabel = isAr?'أسبوع':isRu?'Неделя':'Week';
+
+  // Check if it's current week
+  if (wId === currentWeekId) return;
+
+  // Show week detail for closed weeks
+  const snap = await getDocs(weeksRef());
+  const w = snap.docs.find(d=>d.id===wId);
+  if (w && w.data().status === 'closed') {
+    showWeekDetail(wId);
+  } else {
+    // It's current open week - just update badge
+    currentWeekId = wId;
+    document.getElementById('week-badge').textContent = `${weekLabel} ${wNum} ▾`;
+    renderAll();
+  }
+};
+
+// Close week dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.week-nav-wrap')) {
+    const dd = document.getElementById('week-nav-dropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
 window.toggleLangDropdown = (e) => {
   e.stopPropagation();
   document.querySelectorAll('.lang-dropdown').forEach(d => d.classList.toggle('open'));
@@ -311,6 +370,12 @@ function applyStaticTranslations() {
   safe('lbl-date', t('date'));
   safe('lbl-desc', t('description'));
   safe('btn-save-exp', t('saveExp'));
+  // Update week badge language
+  const wb = document.getElementById('week-badge');
+  if (wb) {
+    const currentText = wb.textContent.replace(/[^0-9]/g,'');
+    if (currentText) wb.textContent = t('week') + ' ' + currentText + ' ▾';
+  }
   } catch(e) { console.error('Translation error:', e); }
 }
 
@@ -500,7 +565,7 @@ async function ensureCurrentWeek() {
   }
   const all = await getDocs(weeksRef());
   const w = all.docs.find(d=>d.id===currentWeekId);
-  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum}`;
+  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
 }
 
 window.closeWeek = async () => {
@@ -511,7 +576,7 @@ window.closeWeek = async () => {
   currentWeekId = ref.id;
   const allN = await getDocs(weeksRef());
   const w = allN.docs.find(d=>d.id===currentWeekId);
-  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum}`;
+  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
   showToast('✓'); renderAll();
 };
 
@@ -1533,6 +1598,18 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #topbar .company{font-size:10px;color:var(--text2);margin-top:1px;}
 .topbar-right{display:flex;align-items:center;gap:6px;}
 .week-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);}
+.week-nav-wrap{position:relative;display:inline-block;}
+.week-nav-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);cursor:pointer;font-weight:700;white-space:nowrap;}
+.week-nav-dropdown{display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;min-width:180px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow:hidden;max-height:280px;overflow-y:auto;}
+[dir="rtl"] .week-nav-dropdown{right:auto;left:0;}
+.week-nav-dropdown.open{display:block;}
+.week-nav-item{padding:10px 14px;font-size:12px;cursor:pointer;color:var(--text);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+.week-nav-item:last-child{border-bottom:none;}
+.week-nav-item:hover{background:var(--surface2);}
+.week-nav-item.active{color:var(--accent);font-weight:700;}
+.week-nav-item .wni-badge{font-size:10px;padding:2px 8px;border-radius:20px;}
+.week-nav-item .wni-open{background:#0d2b1f;color:var(--accent2);border:1px solid #1a4a30;}
+.week-nav-item .wni-closed{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
 .lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--accent);cursor:pointer;font-weight:700;}
 .lang-dropdown-wrap{position:relative;display:inline-block;}
 .lang-dropdown{display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:110px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden;}
@@ -1579,6 +1656,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .form-group{margin-bottom:12px;}
 .form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px;display:block;}
 .form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
+datalist option{background:var(--surface);color:var(--text);}
 .form-input:focus{border-color:var(--accent);}
 .form-input::placeholder{color:var(--text2);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -1715,7 +1793,10 @@ select.form-input{appearance:none;}
           <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
         </div>
       </div>
-      <div class="week-badge" id="week-badge">Week 1</div>
+      <div class="week-nav-wrap">
+        <button class="week-nav-btn" id="week-badge" onclick="toggleWeekDropdown(event)">Week 1 ▾</button>
+        <div class="week-nav-dropdown" id="week-nav-dropdown"></div>
+      </div>
       <div class="user-btn" onclick="doLogout()">👤 <span id="user-name-display" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;"></span></div>
     </div>
   </div>
@@ -1900,8 +1981,8 @@ select.form-input{appearance:none;}
       <div class="form-group"><label class="form-label" id="lbl-rate">Rate ($)</label><input class="form-input" id="l-rate" type="number" placeholder="0.00" min="0" step="0.01"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label" id="lbl-origin">Origin</label><input class="form-input" id="l-origin" type="text" placeholder="Chicago, IL"></div>
-      <div class="form-group"><label class="form-label" id="lbl-dest">Destination</label><input class="form-input" id="l-dest" type="text" placeholder="Dallas, TX"></div>
+      <div class="form-group"><label class="form-label" id="lbl-origin">Origin</label><input class="form-input" id="l-origin" type="text" placeholder="Chicago, IL" list="us-states" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label" id="lbl-dest">Destination</label><input class="form-input" id="l-dest" type="text" placeholder="Dallas, TX" list="us-states" autocomplete="off"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label" id="lbl-miles">Mileage</label><input class="form-input" id="l-miles" type="number" placeholder="0" min="0"></div>
@@ -1963,6 +2044,61 @@ select.form-input{appearance:none;}
 </div>
 
 <!-- Custom Confirm Modal -->
+<!-- US States Datalist -->
+<datalist id="us-states">
+  <option value="AL">AL - Alabama</option>
+  <option value="AK">AK - Alaska</option>
+  <option value="AZ">AZ - Arizona</option>
+  <option value="AR">AR - Arkansas</option>
+  <option value="CA">CA - California</option>
+  <option value="CO">CO - Colorado</option>
+  <option value="CT">CT - Connecticut</option>
+  <option value="DE">DE - Delaware</option>
+  <option value="FL">FL - Florida</option>
+  <option value="GA">GA - Georgia</option>
+  <option value="HI">HI - Hawaii</option>
+  <option value="ID">ID - Idaho</option>
+  <option value="IL">IL - Illinois</option>
+  <option value="IN">IN - Indiana</option>
+  <option value="IA">IA - Iowa</option>
+  <option value="KS">KS - Kansas</option>
+  <option value="KY">KY - Kentucky</option>
+  <option value="LA">LA - Louisiana</option>
+  <option value="ME">ME - Maine</option>
+  <option value="MD">MD - Maryland</option>
+  <option value="MA">MA - Massachusetts</option>
+  <option value="MI">MI - Michigan</option>
+  <option value="MN">MN - Minnesota</option>
+  <option value="MS">MS - Mississippi</option>
+  <option value="MO">MO - Missouri</option>
+  <option value="MT">MT - Montana</option>
+  <option value="NE">NE - Nebraska</option>
+  <option value="NV">NV - Nevada</option>
+  <option value="NH">NH - New Hampshire</option>
+  <option value="NJ">NJ - New Jersey</option>
+  <option value="NM">NM - New Mexico</option>
+  <option value="NY">NY - New York</option>
+  <option value="NC">NC - North Carolina</option>
+  <option value="ND">ND - North Dakota</option>
+  <option value="OH">OH - Ohio</option>
+  <option value="OK">OK - Oklahoma</option>
+  <option value="OR">OR - Oregon</option>
+  <option value="PA">PA - Pennsylvania</option>
+  <option value="RI">RI - Rhode Island</option>
+  <option value="SC">SC - South Carolina</option>
+  <option value="SD">SD - South Dakota</option>
+  <option value="TN">TN - Tennessee</option>
+  <option value="TX">TX - Texas</option>
+  <option value="UT">UT - Utah</option>
+  <option value="VT">VT - Vermont</option>
+  <option value="VA">VA - Virginia</option>
+  <option value="WA">WA - Washington</option>
+  <option value="WV">WV - West Virginia</option>
+  <option value="WI">WI - Wisconsin</option>
+  <option value="WY">WY - Wyoming</option>
+  <option value="DC">DC - Washington D.C.</option>
+</datalist>
+
 <div id="custom-confirm">
   <div class="confirm-box">
     <div class="confirm-icon" id="confirm-icon-el">⚠️</div>
