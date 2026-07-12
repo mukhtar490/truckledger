@@ -1905,7 +1905,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .week-nav-item .wni-badge{font-size:10px;padding:2px 8px;border-radius:20px;}
 .week-nav-item .wni-open{background:#0d2b1f;color:var(--accent2);border:1px solid #1a4a30;}
 .week-nav-item .wni-closed{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
-.lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--accent);cursor:pointer;font-weight:700;}
+.lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;font-size:14px;color:var(--accent);cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;}
 .lang-dropdown-wrap{position:relative;display:inline-block;}
 .lang-dropdown{display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:110px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden;}
 [dir="rtl"] .lang-dropdown{right:auto;left:0;}
@@ -2024,11 +2024,11 @@ select.form-input{appearance:none;}
   <div class="auth-box">
     <div style="text-align:right;margin-bottom:12px">
       <div class="lang-dropdown-wrap">
-        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
+        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Language">🌐</button>
         <div class="lang-dropdown">
-          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
-          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
-          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 English</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 Русский</div>
         </div>
       </div>
     </div>
@@ -2083,11 +2083,11 @@ select.form-input{appearance:none;}
     </div>
     <div class="topbar-right">
       <div class="lang-dropdown-wrap">
-        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
+        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Language">🌐</button>
         <div class="lang-dropdown">
-          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
-          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
-          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 English</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 Русский</div>
         </div>
       </div>
       <div class="week-nav-wrap">
@@ -2124,11 +2124,14 @@ select.form-input{appearance:none;}
         <div class="wb-text">📅 Current week is open</div>
         <button class="btn btn-primary btn-sm" onclick="closeWeek()">Close Week</button>
       </div>
-      <div class="sum-grid">
-        <div class="sum-box income"><div class="sl" id="lbl-sum-income">Total Income</div><div class="sv" id="sum-income">$0.00</div></div>
-        <div class="sum-box expense"><div class="sl" id="lbl-sum-exp">Total Expenses</div><div class="sv" id="sum-expenses" style="color:var(--danger)">$0.00</div></div>
-        <div class="sum-box deduct"><div class="sl" id="lbl-sum-deduct">Deductions</div><div class="sv" id="sum-deductions" style="color:var(--accent)">$0.00</div></div>
-        <div class="sum-box"><div class="sl" id="lbl-sum-loads">Loads This Week</div><div class="sv" id="sum-loads">0</div></div>
+      <!-- Hidden elements for JS compatibility -->
+      <span id="sum-income" style="display:none">$0.00</span>
+      <span id="sum-expenses" style="display:none">$0.00</span>
+      <span id="sum-deductions" style="display:none">$0.00</span>
+      <!-- Loads count only -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;margin-bottom:4px">
+        <div style="font-size:12px;color:var(--text2)" id="lbl-sum-loads">Loads This Week</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text)" id="sum-loads">0</div>
       </div>
       <!-- DRIVER PAY CARD -->
       <div id="driver-pay-card" style="display:none;margin-bottom:12px">
@@ -2462,9 +2465,7 @@ select.form-input{appearance:none;}
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   const flags = { en:'🇺🇸 EN', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
-  document.querySelectorAll('.lang-current').forEach(el => {
-    el.textContent = flags[lang] || '🇺🇸 EN';
-  });
+  // lang button is now 🌐 globe icon
 })();
 
 // Auth mode init
