@@ -2069,11 +2069,10 @@ select.form-input{appearance:none;}
   <div id="profit-hero">
     <div class="profit-label">Net Profit — This Week</div>
     <div class="profit-value zero" id="net-profit-display">$0.00</div>
-    <div class="profit-meta">
-      <div class="pm-item"><div class="pml">Gross Income</div><div class="pmv" id="hero-income" style="color:var(--accent2)">$0.00</div></div>
-      <div class="pm-item"><div class="pml">Expenses</div><div class="pmv" id="hero-expenses" style="color:var(--danger)">$0.00</div></div>
-      <div class="pm-item"><div class="pml">Deductions</div><div class="pmv" id="hero-deductions" style="color:var(--accent)">$0.00</div></div>
-    </div>
+    <!-- Hidden for JS compatibility -->
+    <span id="hero-income" style="display:none">$0.00</span>
+    <span id="hero-expenses" style="display:none">$0.00</span>
+    <span id="hero-deductions" style="display:none">$0.00</span>
   </div>
 
   <div id="tabs">
@@ -2091,11 +2090,12 @@ select.form-input{appearance:none;}
         <div class="wb-text">📅 Current week is open</div>
         <button class="btn btn-primary btn-sm" onclick="closeWeek()">Close Week</button>
       </div>
-      <!-- Hidden elements for JS compatibility -->
-      <span id="sum-income" style="display:none">$0.00</span>
-      <span id="sum-expenses" style="display:none">$0.00</span>
-      <span id="sum-deductions" style="display:none">$0.00</span>
-      <span id="sum-loads" style="display:none">0</span>
+      <div class="sum-grid">
+        <div class="sum-box income"><div class="sl" id="lbl-sum-income">Total Income</div><div class="sv" id="sum-income">$0.00</div></div>
+        <div class="sum-box expense"><div class="sl" id="lbl-sum-exp">Total Expenses</div><div class="sv" id="sum-expenses" style="color:var(--danger)">$0.00</div></div>
+        <div class="sum-box deduct"><div class="sl" id="lbl-sum-deduct">Deductions</div><div class="sv" id="sum-deductions" style="color:var(--accent)">$0.00</div></div>
+        <div class="sum-box"><div class="sl" id="lbl-sum-loads">Loads This Week</div><div class="sv" id="sum-loads">0</div></div>
+      </div>
       <!-- DRIVER PAY CARD -->
       <div id="driver-pay-card" style="display:none;margin-bottom:12px">
         <div class="card" style="background:linear-gradient(135deg,#0d2b1f,#0f1d14);border-color:#1a4a30">
