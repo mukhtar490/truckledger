@@ -374,11 +374,8 @@ function applyStaticTranslations() {
   // Update week badge language
   const wb = document.getElementById('week-badge');
   if (wb) {
-    const wNum = wb.textContent.replace(/[^0-9]/g,'');
-    if (wNum) {
-      const wLbl = currentLang==='ar'?'س':currentLang==='ru'?'Н':'W';
-      wb.textContent = wLbl + wNum + ' ▾';
-    }
+    const currentText = wb.textContent.replace(/[^0-9]/g,'');
+    if (currentText) wb.textContent = t('week') + ' ' + currentText + ' ▾';
   }
   } catch(e) { console.error('Translation error:', e); }
 }
@@ -494,8 +491,7 @@ function showAuth() {
 function showApp() {
   document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('screen-app').style.display = 'flex';
-  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
-  document.getElementById('user-name-display').textContent = displayName;
+  document.getElementById('user-name-display').textContent = currentUser?.displayName || currentUser?.email || 'User';
 }
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
@@ -570,11 +566,7 @@ async function ensureCurrentWeek() {
   }
   const all = await getDocs(weeksRef());
   const w = all.docs.find(d=>d.id===currentWeekId);
-  if (w) {
-    const wNum = w.data().weekNum;
-    const wLabel = currentLang==='ar'?'س':currentLang==='ru'?'Н':'W';
-    document.getElementById('week-badge').textContent = wLabel + wNum + ' ▾';
-  }
+  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
 }
 
 window.closeWeek = async () => {
@@ -585,11 +577,7 @@ window.closeWeek = async () => {
   currentWeekId = ref.id;
   const allN = await getDocs(weeksRef());
   const w = allN.docs.find(d=>d.id===currentWeekId);
-  if (w) {
-    const wNum = w.data().weekNum;
-    const wLabel = currentLang==='ar'?'س':currentLang==='ru'?'Н':'W';
-    document.getElementById('week-badge').textContent = wLabel + wNum + ' ▾';
-  }
+  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
   showToast('✓'); renderAll();
 };
 
@@ -1479,16 +1467,7 @@ window.exportMonthlyPDF = async (monthKey, monthLabel) => {
   @media print{body{padding:16px;}}</style></head>
   <body>
   <div class="header">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="width:36px;height:36px;border-radius:50%;background:#10B981;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <div style="width:28px;height:28px;border-radius:50%;background:#0A0F1E;display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:4px 4px 5px">
-          <div style="width:5px;height:8px;background:#10B981;border-radius:1px 1px 0 0"></div>
-          <div style="width:5px;height:12px;background:#F59E0B;border-radius:1px 1px 0 0"></div>
-          <div style="width:5px;height:16px;background:#10B981;border-radius:1px 1px 0 0"></div>
-        </div>
-      </div>
-      <div class="title">${company}</div>
-    </div>
+    <div class="title">🚛 ${company}</div>
     <div style="color:#9CA3AF;margin-top:4px">${isAr?'التقرير الشهري':'Monthly Report'} — ${monthLabel}</div>
     <div style="font-size:28px;font-weight:900;color:${totalNet>=0?'#10B981':'#EF4444'};margin-top:12px">${fmt(totalNet)}</div>
   </div>
@@ -1741,16 +1720,7 @@ window.exportPDF = async (weekId, weekNum) => {
   <div class="header">
     <div class="header-top">
       <div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:32px;height:32px;border-radius:50%;background:#10B981;display:flex;align-items:center;justify-content:center">
-            <div style="width:24px;height:24px;border-radius:50%;background:#0A0F1E;display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:3px 3px 4px">
-              <div style="width:4px;height:7px;background:#10B981;border-radius:1px 1px 0 0"></div>
-              <div style="width:4px;height:11px;background:#F59E0B;border-radius:1px 1px 0 0"></div>
-              <div style="width:4px;height:14px;background:#10B981;border-radius:1px 1px 0 0"></div>
-            </div>
-          </div>
-          <div class="company-name">${company}</div>
-        </div>
+        <div class="company-name">🚛 ${company}</div>
         <div class="report-meta">${isAr?'تقرير أسبوعي':'Weekly Report'} · ${userName}</div>
         <div class="report-meta" style="margin-top:2px">${date}</div>
       </div>
@@ -1905,7 +1875,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .week-nav-item .wni-badge{font-size:10px;padding:2px 8px;border-radius:20px;}
 .week-nav-item .wni-open{background:#0d2b1f;color:var(--accent2);border:1px solid #1a4a30;}
 .week-nav-item .wni-closed{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
-.lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;font-size:14px;color:var(--accent);cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;}
+.lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--accent);cursor:pointer;font-weight:700;}
 .lang-dropdown-wrap{position:relative;display:inline-block;}
 .lang-dropdown{display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:110px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden;}
 [dir="rtl"] .lang-dropdown{right:auto;left:0;}
@@ -2024,11 +1994,11 @@ select.form-input{appearance:none;}
   <div class="auth-box">
     <div style="text-align:right;margin-bottom:12px">
       <div class="lang-dropdown-wrap">
-        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Language">🌐</button>
+        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
         <div class="lang-dropdown">
-          <div class="lang-option" onclick="switchLang('en')">🇺🇸 English</div>
-          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 العربية</div>
-          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 Русский</div>
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
         </div>
       </div>
     </div>
@@ -2083,11 +2053,11 @@ select.form-input{appearance:none;}
     </div>
     <div class="topbar-right">
       <div class="lang-dropdown-wrap">
-        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Language">🌐</button>
+        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
         <div class="lang-dropdown">
-          <div class="lang-option" onclick="switchLang('en')">🇺🇸 English</div>
-          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 العربية</div>
-          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 Русский</div>
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
         </div>
       </div>
       <div class="week-nav-wrap">
@@ -2095,7 +2065,6 @@ select.form-input{appearance:none;}
         <div class="week-nav-dropdown" id="week-nav-dropdown"></div>
       </div>
       <div class="user-btn" onclick="doLogout()">👤 <span id="user-name-display" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;"></span></div>
-      <button class="settings-btn" onclick="switchTab('settings')">⚙️</button>
     </div>
   </div>
 
@@ -2115,6 +2084,7 @@ select.form-input{appearance:none;}
     <div class="tab" onclick="switchTab('expenses')" id="tab-expenses"><span class="tab-icon">💸</span>Expenses</div>
     <div class="tab" onclick="switchTab('history')" id="tab-history"><span class="tab-icon">📅</span>History</div>
     <div class="tab" onclick="switchTab('analytics')" id="tab-analytics"><span class="tab-icon">📊</span><span id="tab-analytics-label">Monthly</span></div>
+    <div class="tab" onclick="switchTab('settings')" id="tab-settings"><span class="tab-icon">⚙️</span>Settings</div>
   </div>
 
   <div id="content">
@@ -2124,14 +2094,11 @@ select.form-input{appearance:none;}
         <div class="wb-text">📅 Current week is open</div>
         <button class="btn btn-primary btn-sm" onclick="closeWeek()">Close Week</button>
       </div>
-      <!-- Hidden elements for JS compatibility -->
-      <span id="sum-income" style="display:none">$0.00</span>
-      <span id="sum-expenses" style="display:none">$0.00</span>
-      <span id="sum-deductions" style="display:none">$0.00</span>
-      <!-- Loads count only -->
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;margin-bottom:4px">
-        <div style="font-size:12px;color:var(--text2)" id="lbl-sum-loads">Loads This Week</div>
-        <div style="font-size:16px;font-weight:800;color:var(--text)" id="sum-loads">0</div>
+      <div class="sum-grid">
+        <div class="sum-box income"><div class="sl" id="lbl-sum-income">Total Income</div><div class="sv" id="sum-income">$0.00</div></div>
+        <div class="sum-box expense"><div class="sl" id="lbl-sum-exp">Total Expenses</div><div class="sv" id="sum-expenses" style="color:var(--danger)">$0.00</div></div>
+        <div class="sum-box deduct"><div class="sl" id="lbl-sum-deduct">Deductions</div><div class="sv" id="sum-deductions" style="color:var(--accent)">$0.00</div></div>
+        <div class="sum-box"><div class="sl" id="lbl-sum-loads">Loads This Week</div><div class="sv" id="sum-loads">0</div></div>
       </div>
       <!-- DRIVER PAY CARD -->
       <div id="driver-pay-card" style="display:none;margin-bottom:12px">
@@ -2300,7 +2267,6 @@ select.form-input{appearance:none;}
         <button class="btn btn-danger btn-full" id="btn-new-week" onclick="confirmNewWeek()">🔄 Start New Week</button>
       </div>
       <div style="margin-top:8px">
-        <button class="btn btn-success btn-full" onclick="exportExcel()" style="margin-bottom:8px">📊 Export Excel</button>
         <button class="btn btn-primary btn-full" id="btn-export-pdf" onclick="exportPDF()" style="margin-bottom:8px">📄 Export PDF Report</button>
       </div>
       <div style="margin-top:8px">
@@ -2465,7 +2431,9 @@ select.form-input{appearance:none;}
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   const flags = { en:'🇺🇸 EN', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
-  // lang button is now 🌐 globe icon
+  document.querySelectorAll('.lang-current').forEach(el => {
+    el.textContent = flags[lang] || '🇺🇸 EN';
+  });
 })();
 
 // Auth mode init
