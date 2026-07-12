@@ -825,7 +825,7 @@ function renderRPM(data) {
   const milesLbl = document.getElementById('lbl-rpm-miles');
   if (el) el.textContent = totalMiles > 0 ? '$' + rpm.toFixed(2) : '—';
   if (mEl) mEl.textContent = totalMiles.toLocaleString('en-US') + ' mi';
-  if (titleEl) titleEl.textContent = t('rpmTitle');
+  if (titleEl) titleEl.textContent = currentLang==='ar'?'⚡ الدخل لكل ميل':currentLang==='ru'?'⚡ Доход за Милю':'⚡ Revenue Per Mile';
   if (milesLbl) milesLbl.textContent = currentLang==='ar'?'إجمالي الأميال':currentLang==='ru'?'Всего Миль':'Total Miles';
 }
 
@@ -833,9 +833,9 @@ async function renderComparison(data) {
   const compLbl = document.getElementById('lbl-comparison');
   const twLbl = document.getElementById('lbl-this-week');
   const lwLbl = document.getElementById('lbl-last-week');
-  if (compLbl) compLbl.textContent = t('weeksComparison');
-  if (twLbl) twLbl.textContent = t('thisWeek');
-  if (lwLbl) lwLbl.textContent = t('lastWeek');
+  if (compLbl) compLbl.textContent = currentLang==='ar'?'📊 مقارنة الأسابيع':currentLang==='ru'?'📊 Сравнение Недель':'📊 Weekly Comparison';
+  if (twLbl) twLbl.textContent = currentLang==='ar'?'هذا الأسبوع':currentLang==='ru'?'Эта Неделя':'This Week';
+  if (lwLbl) lwLbl.textContent = currentLang==='ar'?'الأسبوع الماضي':currentLang==='ru'?'Прошлая Неделя':'Last Week';
 
   const thisNet = data.net;
   document.getElementById('compare-this').textContent = fmt(thisNet);
@@ -899,7 +899,7 @@ function renderDriverPay(data) {
   const lbc = document.getElementById('lbl-driver-pay-calc');
   const lg = document.getElementById('lbl-gross-base');
   const lp = document.getElementById('lbl-driver-pct-label');
-  if (lbw) lbw.textContent = t('driverPayWeek');
+  if (lbw) lbw.textContent = currentLang==='ar'?'💰 مرتب السائق هذا الأسبوع':currentLang==='ru'?'💰 Зарплата за Неделю':'💰 Driver Pay This Week';
   if (lbc) lbc.textContent = currentLang==='ar' ? 'نسبة السائق: ' + driverPct + '% من إجمالي الدخل' : currentLang==='ru' ? 'Ставка: ' + driverPct + '% от валового дохода' : driverPct + '% of gross income';
   if (lg) lg.textContent = t('grossIncome');
   if (lp) lp.textContent = currentLang==='ar' ? 'نسبة السائق' : currentLang==='ru' ? 'Ставка водителя' : 'Driver %';
@@ -2082,7 +2082,7 @@ select.form-input{appearance:none;}
     <div class="tab" onclick="switchTab('loads')" id="tab-loads"><span class="tab-icon">📦</span>Loads</div>
     <div class="tab" onclick="switchTab('expenses')" id="tab-expenses"><span class="tab-icon">💸</span>Expenses</div>
     <div class="tab" onclick="switchTab('history')" id="tab-history"><span class="tab-icon">📅</span>History</div>
-    <div class="tab" onclick="switchTab('analytics')" id="tab-analytics"><span class="tab-icon">📆</span><span id="tab-analytics-label">Monthly</span></div>
+    <div class="tab" onclick="switchTab('analytics')" id="tab-analytics"><span class="tab-icon">📊</span><span id="tab-analytics-label">Monthly</span></div>
     <div class="tab" onclick="switchTab('settings')" id="tab-settings"><span class="tab-icon">⚙️</span>Settings</div>
   </div>
 
@@ -2104,7 +2104,7 @@ select.form-input{appearance:none;}
         <div class="card" style="background:linear-gradient(135deg,#0d2b1f,#0f1d14);border-color:#1a4a30">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
             <div>
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#6ee7a0;font-weight:700" id="lbl-driver-pay-week">Driver Pay This Week</div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#6ee7a0;font-weight:700" id="lbl-driver-pay-week">💰 Driver Pay This Week</div>
               <div style="font-size:10px;color:#9CA3AF;margin-top:2px" id="lbl-driver-pay-calc">Based on % of gross income</div>
             </div>
             <div style="background:#0d2b1f;border:1px solid #1a4a30;border-radius:20px;padding:3px 10px;font-size:11px;color:#10B981;font-weight:700" id="driver-pay-pct-badge">0%</div>
