@@ -371,8 +371,11 @@ function applyStaticTranslations() {
   // Update week badge language
   const wb = document.getElementById('week-badge');
   if (wb) {
-    const currentText = wb.textContent.replace(/[^0-9]/g,'');
-    if (currentText) wb.textContent = t('week') + ' ' + currentText + ' ▾';
+    const wNum = wb.textContent.replace(/[^0-9]/g,'');
+    if (wNum) {
+      const wLbl = currentLang==='ar'?'أ':currentLang==='ru'?'Н':'W';
+      wb.textContent = wLbl + wNum + ' ▾';
+    }
   }
   } catch(e) { console.error('Translation error:', e); }
 }
@@ -563,7 +566,11 @@ async function ensureCurrentWeek() {
   }
   const all = await getDocs(weeksRef());
   const w = all.docs.find(d=>d.id===currentWeekId);
-  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
+  if (w) {
+    const wNum = w.data().weekNum;
+    const wLbl = currentLang==='ar'?'أ':currentLang==='ru'?'Н':'W';
+    document.getElementById('week-badge').textContent = wLbl + wNum + ' ▾';
+  }
 }
 
 window.closeWeek = async () => {
@@ -574,7 +581,11 @@ window.closeWeek = async () => {
   currentWeekId = ref.id;
   const allN = await getDocs(weeksRef());
   const w = allN.docs.find(d=>d.id===currentWeekId);
-  if (w) document.getElementById('week-badge').textContent = `${t('week')} ${w.data().weekNum} ▾`;
+  if (w) {
+    const wNum = w.data().weekNum;
+    const wLbl = currentLang==='ar'?'أ':currentLang==='ru'?'Н':'W';
+    document.getElementById('week-badge').textContent = wLbl + wNum + ' ▾';
+  }
   showToast('✓'); renderAll();
 };
 
@@ -2069,10 +2080,11 @@ select.form-input{appearance:none;}
   <div id="profit-hero">
     <div class="profit-label">Net Profit — This Week</div>
     <div class="profit-value zero" id="net-profit-display">$0.00</div>
-    <!-- Hidden for JS compatibility -->
-    <span id="hero-income" style="display:none">$0.00</span>
-    <span id="hero-expenses" style="display:none">$0.00</span>
-    <span id="hero-deductions" style="display:none">$0.00</span>
+    <div class="profit-meta">
+      <div class="pm-item"><div class="pml">Gross Income</div><div class="pmv" id="hero-income" style="color:var(--accent2)">$0.00</div></div>
+      <div class="pm-item"><div class="pml">Expenses</div><div class="pmv" id="hero-expenses" style="color:var(--danger)">$0.00</div></div>
+      <div class="pm-item"><div class="pml">Deductions</div><div class="pmv" id="hero-deductions" style="color:var(--accent)">$0.00</div></div>
+    </div>
   </div>
 
   <div id="tabs">
