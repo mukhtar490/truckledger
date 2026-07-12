@@ -208,10 +208,7 @@ window.switchLang = (lang) => {
 };
 
 function updateLangButtons() {
-  const flags = { en:'🇺🇸 EN', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
-  document.querySelectorAll('.lang-current').forEach(el => {
-    el.textContent = flags[currentLang] || '🇺🇸 EN';
-  });
+  // lang button is 🌐 - no update needed
 }
 
 // ── WEEK NAVIGATION ──
@@ -1875,7 +1872,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .week-nav-item .wni-badge{font-size:10px;padding:2px 8px;border-radius:20px;}
 .week-nav-item .wni-open{background:#0d2b1f;color:var(--accent2);border:1px solid #1a4a30;}
 .week-nav-item .wni-closed{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
-.lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--accent);cursor:pointer;font-weight:700;}
+.lang-btn{background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;font-size:15px;color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;}
 .lang-dropdown-wrap{position:relative;display:inline-block;}
 .lang-dropdown{display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:110px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden;}
 [dir="rtl"] .lang-dropdown{right:auto;left:0;}
@@ -1994,11 +1991,11 @@ select.form-input{appearance:none;}
   <div class="auth-box">
     <div style="text-align:right;margin-bottom:12px">
       <div class="lang-dropdown-wrap">
-        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
+        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Language">🌐</button>
         <div class="lang-dropdown">
-          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
-          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
-          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 English</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 Русский</div>
         </div>
       </div>
     </div>
@@ -2053,11 +2050,11 @@ select.form-input{appearance:none;}
     </div>
     <div class="topbar-right">
       <div class="lang-dropdown-wrap">
-        <button class="lang-btn" onclick="toggleLangDropdown(event)"><span class="lang-current">🇺🇸 EN</span> ▾</button>
+        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Language">🌐</button>
         <div class="lang-dropdown">
-          <div class="lang-option" onclick="switchLang('en')">🇺🇸 EN</div>
-          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 AR</div>
-          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 RU</div>
+          <div class="lang-option" onclick="switchLang('en')">🇺🇸 English</div>
+          <div class="lang-option" onclick="switchLang('ar')">🇸🇦 العربية</div>
+          <div class="lang-option" onclick="switchLang('ru')">🇷🇺 Русский</div>
         </div>
       </div>
       <div class="week-nav-wrap">
