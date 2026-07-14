@@ -458,17 +458,19 @@ window.showConfirm = (title, msg, icon, okColor) => {
     document.getElementById('custom-confirm').classList.add('open');
   });
 };
-window._confirmOk = () => {
+window._confirmOk = (e) => {
+  if(e) e.stopPropagation();
   document.getElementById('custom-confirm').classList.remove('open');
   if (_confirmResolve) { _confirmResolve(true); _confirmResolve = null; }
 };
-window._confirmCancel = () => {
+window._confirmCancel = (e) => {
+  if(e) e.stopPropagation();
   document.getElementById('custom-confirm').classList.remove('open');
   if (_confirmResolve) { _confirmResolve(false); _confirmResolve = null; }
 };
 
 window.doLogout = async () => {
-  if (!confirm(t('signOutConfirm'))) return;
+  if (!await showConfirm(currentLang==='ar'?'تسجيل الخروج':currentLang==='ru'?'Выход':'Sign Out', t('signOutConfirm'), '🚪', 'var(--danger)')) return;
   await signOut(auth);
 };
 
@@ -574,7 +576,7 @@ async function ensureCurrentWeek() {
 }
 
 window.closeWeek = async () => {
-  if (!confirm(t('closeWeekConfirm'))) return;
+  if (!await showConfirm(currentLang==='ar'?'إغلاق الأسبوع':currentLang==='ru'?'Закрыть неделю':'Close Week', t('closeWeekConfirm'), '📅', 'var(--accent)')) return;
   await updateDoc(doc(weeksRef(),currentWeekId), { status:'closed', endDate:serverTimestamp() });
   const all = await getDocs(weeksRef());
   const ref = await addDoc(weeksRef(), { status:'open', weekNum:all.size+1, startDate:serverTimestamp(), endDate:null });
@@ -590,7 +592,7 @@ window.closeWeek = async () => {
 };
 
 window.confirmNewWeek = async () => {
-  if (!confirm(t('newWeekConfirm'))) return;
+  if (!await showConfirm(currentLang==='ar'?'أسبوع جديد':currentLang==='ru'?'Новая неделя':'New Week', t('newWeekConfirm'), '🔄', 'var(--accent)')) return;
   await updateDoc(doc(weeksRef(),currentWeekId), { status:'closed', endDate:serverTimestamp() });
   const all = await getDocs(weeksRef());
   const ref = await addDoc(weeksRef(), { status:'open', weekNum:all.size+1, startDate:serverTimestamp(), endDate:null });
@@ -769,7 +771,7 @@ async function addMilesToOilTracker(miles) {
 }
 
 window.resetOilChange = async () => {
-  if (!confirm(currentLang==='ar'?'تأكيد إعادة الضبط؟':'Confirm oil change reset?')) return;
+  if (!await showConfirm(currentLang==='ar'?'إعادة الضبط':'Reset Counter', currentLang==='ar'?'تأكيد إعادة ضبط عداد الزيت؟':'Confirm oil change reset?', '🔧', 'var(--accent2)')) return;
   settings.oilChangeDone = 0;
   await setDoc(settingsRef(), settings);
   renderOilChange();
@@ -1117,7 +1119,7 @@ window.editLoad = async id => {
 };
 
 window.deleteLoad = async id => {
-  if (!confirm(t('deleteLoad'))) return;
+  if (!await showConfirm(currentLang==='ar'?'حذف الرحلة':currentLang==='ru'?'Удалить':'Delete Load', t('deleteLoad'), '🗑️', 'var(--danger)')) return;
   // Get miles before deleting to subtract from odometer
   try {
     const snap = await getDoc(doc(loadsRef(currentWeekId), id));
@@ -1190,7 +1192,7 @@ window.editExpense = async id => {
 };
 
 window.deleteExpense = async id => {
-  if (!confirm(t('deleteExp'))) return;
+  if (!await showConfirm(currentLang==='ar'?'حذف المصروف':currentLang==='ru'?'Удалить':'Delete Expense', t('deleteExp'), '🗑️', 'var(--danger)')) return;
   await deleteDoc(doc(expensesRef(currentWeekId),id));
   showToast(t('expDeleted')); renderAll();
 };
@@ -1303,7 +1305,7 @@ window.editWeekLoad = async (loadId, wId) => {
 
 // Delete load from closed week
 window.deleteWeekLoad = async (loadId, wId) => {
-  if (!confirm(t('deleteLoad'))) return;
+  if (!await showConfirm(currentLang==='ar'?'حذف الرحلة':currentLang==='ru'?'Удалить':'Delete Load', t('deleteLoad'), '🗑️', 'var(--danger)')) return;
   // Get miles before deleting to subtract from odometer
   try {
     const snap = await getDoc(doc(loadsRef(wId), loadId));
@@ -1334,7 +1336,7 @@ window.editWeekExpense = async (expId, wId) => {
 // Delete expense from closed week
 window.deleteWeekExpense = async (expId, wId) => {
   const isAr = currentLang === 'ar';
-  if (!confirm(currentLang==='ar'?'حذف هذا المصروف؟':'Delete this expense?')) return;
+  if (!await showConfirm(currentLang==='ar'?'حذف المصروف':'Delete Expense', currentLang==='ar'?'حذف هذا المصروف؟':'Delete this expense?', '🗑️', 'var(--danger)')) return;
   await deleteDoc(doc(expensesRef(wId), expId));
   showToast(t('expDeleted'));
   editWeekModal(wId, '');
@@ -1490,9 +1492,24 @@ window.exportMonthlyPDF = async (monthKey, monthLabel) => {
   </body></html>`;
 
   const blob = new Blob([html], {type:'text/html'});
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  const fileName2 = `TruckLedger_${monthLabel.replace(/[^a-zA-Z0-9]/g,'_')}_${new Date().toISOString().split('T')[0]}.html`;
+
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file2 = new File([blob], fileName2, {type:'text/html'});
+      if (navigator.canShare({files:[file2]})) {
+        await navigator.share({ title: `${company} - ${monthLabel}`, files: [file2] });
+        return;
+      }
+    } catch(e) { if(e.name==='AbortError') return; }
+  }
+
+  const url2 = URL.createObjectURL(blob);
+  const a2 = document.createElement('a');
+  a2.href = url2; a2.download = fileName2;
+  document.body.appendChild(a2); a2.click();
+  document.body.removeChild(a2);
+  setTimeout(()=>URL.revokeObjectURL(url2), 3000);
 };
 
 window.switchTab = name => {
@@ -1837,16 +1854,33 @@ window.exportPDF = async (weekId, weekNum) => {
 </html>`;
 
   const blob = new Blob([html], {type:'text/html'});
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank');
-  if (!win) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `TruckLedger_Week${wNum}_${new Date().toISOString().split('T')[0]}.html`;
-    a.click();
+  const fileName = `TruckLedger_Week${wNum}_${new Date().toISOString().split('T')[0]}.html`;
+
+  // Try native share with file (works on Android & iOS)
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file = new File([blob], fileName, {type:'text/html'});
+      if (navigator.canShare({files:[file]})) {
+        await navigator.share({
+          title: `${company} - Week ${wNum} Report`,
+          files: [file]
+        });
+        showToast(isAr?'✅ تمت المشاركة':'✅ Shared!');
+        return;
+      }
+    } catch(e) { if(e.name==='AbortError') return; }
   }
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  showToast(isAr ? '📄 جاري فتح التقرير...' : '📄 Opening report...');
+
+  // Fallback: download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  showToast(isAr ? '📥 جاري التنزيل...' : '📥 Downloading...');
 };
 
 // Init lang
@@ -1974,9 +2008,9 @@ select.form-input{appearance:none;}
 .chip-red{background:#2b0d0d;color:var(--danger);border:1px solid #4a1010;}
 .empty{text-align:center;padding:40px 20px;color:var(--text2);}
 .empty-icon{font-size:42px;margin-bottom:12px;}.empty-text{font-size:14px;}
-#custom-confirm{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:24px;}
+#custom-confirm{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:24px;}
 #custom-confirm.open{display:flex;}
-.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center;animation:slideUp 0.2s ease;}
+.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center;animation:slideUp 0.2s ease;position:relative;z-index:10000;}
 .confirm-icon{font-size:44px;margin-bottom:12px;}
 .confirm-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;}
 .confirm-msg{font-size:14px;color:var(--text2);margin-bottom:22px;line-height:1.5;}
@@ -2426,8 +2460,8 @@ select.form-input{appearance:none;}
     <div class="confirm-title" id="confirm-title-el"></div>
     <div class="confirm-msg" id="confirm-msg-el"></div>
     <div class="confirm-actions">
-      <button class="btn-cancel" onclick="_confirmCancel()">Cancel</button>
-      <button class="btn-confirm" id="confirm-ok-el" onclick="_confirmOk()">Confirm</button>
+      <button class="btn-cancel" onclick="_confirmCancel(event)">Cancel</button>
+      <button class="btn-confirm" id="confirm-ok-el" onclick="_confirmOk(event)">Confirm</button>
     </div>
   </div>
 </div>
