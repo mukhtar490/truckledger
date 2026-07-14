@@ -458,19 +458,17 @@ window.showConfirm = (title, msg, icon, okColor) => {
     document.getElementById('custom-confirm').classList.add('open');
   });
 };
-window._confirmOk = (e) => {
-  if(e) e.stopPropagation();
+window._confirmOk = () => {
   document.getElementById('custom-confirm').classList.remove('open');
   if (_confirmResolve) { _confirmResolve(true); _confirmResolve = null; }
 };
-window._confirmCancel = (e) => {
-  if(e) e.stopPropagation();
+window._confirmCancel = () => {
   document.getElementById('custom-confirm').classList.remove('open');
   if (_confirmResolve) { _confirmResolve(false); _confirmResolve = null; }
 };
 
 window.doLogout = async () => {
-  if (!await showConfirm(currentLang==='ar'?'تسجيل الخروج':currentLang==='ru'?'Выход':'Sign Out', t('signOutConfirm'), '🚪', 'var(--danger)')) return;
+  if (!confirm(t('signOutConfirm'))) return;
   await signOut(auth);
 };
 
@@ -576,7 +574,7 @@ async function ensureCurrentWeek() {
 }
 
 window.closeWeek = async () => {
-  if (!await showConfirm(currentLang==='ar'?'إغلاق الأسبوع':currentLang==='ru'?'Закрыть неделю':'Close Week', t('closeWeekConfirm'), '📅', 'var(--accent)')) return;
+  if (!confirm(t('closeWeekConfirm'))) return;
   await updateDoc(doc(weeksRef(),currentWeekId), { status:'closed', endDate:serverTimestamp() });
   const all = await getDocs(weeksRef());
   const ref = await addDoc(weeksRef(), { status:'open', weekNum:all.size+1, startDate:serverTimestamp(), endDate:null });
@@ -592,7 +590,7 @@ window.closeWeek = async () => {
 };
 
 window.confirmNewWeek = async () => {
-  if (!await showConfirm(currentLang==='ar'?'أسبوع جديد':currentLang==='ru'?'Новая неделя':'New Week', t('newWeekConfirm'), '🔄', 'var(--accent)')) return;
+  if (!confirm(t('newWeekConfirm'))) return;
   await updateDoc(doc(weeksRef(),currentWeekId), { status:'closed', endDate:serverTimestamp() });
   const all = await getDocs(weeksRef());
   const ref = await addDoc(weeksRef(), { status:'open', weekNum:all.size+1, startDate:serverTimestamp(), endDate:null });
@@ -771,7 +769,7 @@ async function addMilesToOilTracker(miles) {
 }
 
 window.resetOilChange = async () => {
-  if (!await showConfirm(currentLang==='ar'?'إعادة الضبط':'Reset Counter', currentLang==='ar'?'تأكيد إعادة ضبط عداد الزيت؟':'Confirm oil change reset?', '🔧', 'var(--accent2)')) return;
+  if (!confirm(currentLang==='ar'?'تأكيد إعادة الضبط؟':'Confirm oil change reset?')) return;
   settings.oilChangeDone = 0;
   await setDoc(settingsRef(), settings);
   renderOilChange();
@@ -1044,7 +1042,9 @@ async function renderHistory() {
       <div class="card-actions">
         <button class="btn btn-ghost btn-sm" onclick="showWeekDetail('${w.id}')">📋 ${currentLang==='ar'?'التفاصيل':currentLang==='ru'?'Детали':'Details'}</button>
         <button class="btn btn-success btn-sm" onclick="editWeekModal('${w.id}', ${w.weekNum})">✏️ ${currentLang==='ar'?'تعديل':currentLang==='ru'?'Изменить':'Edit'}</button>
-        <button class="btn btn-primary btn-sm" onclick="exportPDF('${w.id}', ${w.weekNum})">📄 PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="renameWeek('${w.id}', ${w.weekNum})">🔢 ${currentLang==='ar'?'رقم':currentLang==='ru'?'№':'#'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteWeek('${w.id}', ${w.weekNum})">🗑️</button>
+        <button class="btn btn-primary btn-sm" onclick="exportPDF('${w.id}', ${w.weekNum})">📄</button>
       </div>
     </div>`;
   }
@@ -1119,7 +1119,7 @@ window.editLoad = async id => {
 };
 
 window.deleteLoad = async id => {
-  if (!await showConfirm(currentLang==='ar'?'حذف الرحلة':currentLang==='ru'?'Удалить':'Delete Load', t('deleteLoad'), '🗑️', 'var(--danger)')) return;
+  if (!confirm(t('deleteLoad'))) return;
   // Get miles before deleting to subtract from odometer
   try {
     const snap = await getDoc(doc(loadsRef(currentWeekId), id));
@@ -1192,7 +1192,7 @@ window.editExpense = async id => {
 };
 
 window.deleteExpense = async id => {
-  if (!await showConfirm(currentLang==='ar'?'حذف المصروف':currentLang==='ru'?'Удалить':'Delete Expense', t('deleteExp'), '🗑️', 'var(--danger)')) return;
+  if (!confirm(t('deleteExp'))) return;
   await deleteDoc(doc(expensesRef(currentWeekId),id));
   showToast(t('expDeleted')); renderAll();
 };
@@ -1305,7 +1305,7 @@ window.editWeekLoad = async (loadId, wId) => {
 
 // Delete load from closed week
 window.deleteWeekLoad = async (loadId, wId) => {
-  if (!await showConfirm(currentLang==='ar'?'حذف الرحلة':currentLang==='ru'?'Удалить':'Delete Load', t('deleteLoad'), '🗑️', 'var(--danger)')) return;
+  if (!confirm(t('deleteLoad'))) return;
   // Get miles before deleting to subtract from odometer
   try {
     const snap = await getDoc(doc(loadsRef(wId), loadId));
@@ -1336,11 +1336,87 @@ window.editWeekExpense = async (expId, wId) => {
 // Delete expense from closed week
 window.deleteWeekExpense = async (expId, wId) => {
   const isAr = currentLang === 'ar';
-  if (!await showConfirm(currentLang==='ar'?'حذف المصروف':'Delete Expense', currentLang==='ar'?'حذف هذا المصروف؟':'Delete this expense?', '🗑️', 'var(--danger)')) return;
+  if (!confirm(currentLang==='ar'?'حذف هذا المصروف؟':'Delete this expense?')) return;
   await deleteDoc(doc(expensesRef(wId), expId));
   showToast(t('expDeleted'));
   editWeekModal(wId, '');
   renderAll().catch(()=>{});
+};
+
+// ── WEEK MANAGEMENT ──
+window.renameWeek = async (wId, currentNum) => {
+  const isAr = currentLang === 'ar';
+  const isRu = currentLang === 'ru';
+  const prompt_msg = isAr ? `أدخل رقم الأسبوع الجديد (الحالي: ${currentNum})` :
+                    isRu ? `Введите новый номер недели (текущий: ${currentNum})` :
+                    `Enter new week number (current: ${currentNum})`;
+  
+  // Show rename modal
+  const modal = document.getElementById('rename-week-modal');
+  const input = document.getElementById('rename-week-input');
+  const label = document.getElementById('rename-week-label');
+  
+  if (label) label.textContent = prompt_msg;
+  if (input) input.value = currentNum;
+  
+  window._renameWeekId = wId;
+  window._renameWeekCurrent = currentNum;
+  
+  if (modal) modal.classList.add('open');
+};
+
+window.confirmRenameWeek = async () => {
+  const input = document.getElementById('rename-week-input');
+  const newNum = parseInt(input?.value);
+  const wId = window._renameWeekId;
+  const isAr = currentLang === 'ar';
+  
+  if (!newNum || newNum < 1) {
+    showToast(isAr ? '⚠️ أدخل رقماً صحيحاً' : '⚠️ Enter a valid number');
+    return;
+  }
+  
+  try {
+    await updateDoc(doc(weeksRef(), wId), { weekNum: newNum });
+    closeModal('rename-week-modal');
+    showToast(isAr ? `✅ تم تغيير رقم الأسبوع إلى ${newNum}` : `✅ Week renamed to ${newNum}`);
+    renderAll();
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+};
+
+window.deleteWeek = async (wId, wNum) => {
+  const isAr = currentLang === 'ar';
+  const isRu = currentLang === 'ru';
+  const msg = isAr ? `حذف الأسبوع ${wNum} بالكامل؟ لا يمكن التراجع!` :
+              isRu ? `Удалить неделю ${wNum} полностью? Нельзя отменить!` :
+              `Delete Week ${wNum} completely? This cannot be undone!`;
+  
+  if (!await showConfirm(
+    isAr ? `حذف الأسبوع ${wNum}` : isRu ? `Удалить неделю ${wNum}` : `Delete Week ${wNum}`,
+    msg, '🗑️', 'var(--danger)'
+  )) return;
+  
+  try {
+    // Delete all loads in this week
+    const loadsSnap = await getDocs(loadsRef(wId));
+    for (const l of loadsSnap.docs) {
+      await deleteDoc(doc(loadsRef(wId), l.id));
+    }
+    // Delete all expenses in this week
+    const expSnap = await getDocs(expensesRef(wId));
+    for (const e of expSnap.docs) {
+      await deleteDoc(doc(expensesRef(wId), e.id));
+    }
+    // Delete the week itself
+    await deleteDoc(doc(weeksRef(), wId));
+    
+    showToast(isAr ? `✅ تم حذف الأسبوع ${wNum}` : `✅ Week ${wNum} deleted`);
+    renderAll();
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
 };
 
 window.showWeekDetail = async wId => {
@@ -1492,24 +1568,9 @@ window.exportMonthlyPDF = async (monthKey, monthLabel) => {
   </body></html>`;
 
   const blob = new Blob([html], {type:'text/html'});
-  const fileName2 = `TruckLedger_${monthLabel.replace(/[^a-zA-Z0-9]/g,'_')}_${new Date().toISOString().split('T')[0]}.html`;
-
-  if (navigator.share && navigator.canShare) {
-    try {
-      const file2 = new File([blob], fileName2, {type:'text/html'});
-      if (navigator.canShare({files:[file2]})) {
-        await navigator.share({ title: `${company} - ${monthLabel}`, files: [file2] });
-        return;
-      }
-    } catch(e) { if(e.name==='AbortError') return; }
-  }
-
-  const url2 = URL.createObjectURL(blob);
-  const a2 = document.createElement('a');
-  a2.href = url2; a2.download = fileName2;
-  document.body.appendChild(a2); a2.click();
-  document.body.removeChild(a2);
-  setTimeout(()=>URL.revokeObjectURL(url2), 3000);
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
 };
 
 window.switchTab = name => {
@@ -1854,33 +1915,16 @@ window.exportPDF = async (weekId, weekNum) => {
 </html>`;
 
   const blob = new Blob([html], {type:'text/html'});
-  const fileName = `TruckLedger_Week${wNum}_${new Date().toISOString().split('T')[0]}.html`;
-
-  // Try native share with file (works on Android & iOS)
-  if (navigator.share && navigator.canShare) {
-    try {
-      const file = new File([blob], fileName, {type:'text/html'});
-      if (navigator.canShare({files:[file]})) {
-        await navigator.share({
-          title: `${company} - Week ${wNum} Report`,
-          files: [file]
-        });
-        showToast(isAr?'✅ تمت المشاركة':'✅ Shared!');
-        return;
-      }
-    } catch(e) { if(e.name==='AbortError') return; }
-  }
-
-  // Fallback: download
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
-  showToast(isAr ? '📥 جاري التنزيل...' : '📥 Downloading...');
+  const win = window.open(url, '_blank');
+  if (!win) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TruckLedger_Week${wNum}_${new Date().toISOString().split('T')[0]}.html`;
+    a.click();
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  showToast(isAr ? '📄 جاري فتح التقرير...' : '📄 Opening report...');
 };
 
 // Init lang
@@ -2008,9 +2052,9 @@ select.form-input{appearance:none;}
 .chip-red{background:#2b0d0d;color:var(--danger);border:1px solid #4a1010;}
 .empty{text-align:center;padding:40px 20px;color:var(--text2);}
 .empty-icon{font-size:42px;margin-bottom:12px;}.empty-text{font-size:14px;}
-#custom-confirm{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:24px;}
+#custom-confirm{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:center;justify-content:center;padding:24px;}
 #custom-confirm.open{display:flex;}
-.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center;animation:slideUp 0.2s ease;position:relative;z-index:10000;}
+.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center;animation:slideUp 0.2s ease;}
 .confirm-icon{font-size:44px;margin-bottom:12px;}
 .confirm-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;}
 .confirm-msg{font-size:14px;color:var(--text2);margin-bottom:22px;line-height:1.5;}
@@ -2460,11 +2504,28 @@ select.form-input{appearance:none;}
     <div class="confirm-title" id="confirm-title-el"></div>
     <div class="confirm-msg" id="confirm-msg-el"></div>
     <div class="confirm-actions">
-      <button class="btn-cancel" onclick="_confirmCancel(event)">Cancel</button>
-      <button class="btn-confirm" id="confirm-ok-el" onclick="_confirmOk(event)">Confirm</button>
+      <button class="btn-cancel" onclick="_confirmCancel()">Cancel</button>
+      <button class="btn-confirm" id="confirm-ok-el" onclick="_confirmOk()">Confirm</button>
     </div>
   </div>
 </div>
+<!-- Rename Week Modal -->
+<div class="modal-overlay" id="rename-week-modal">
+  <div class="modal" style="max-height:300px">
+    <div class="modal-title">
+      <span>🔢 Rename Week</span>
+      <button class="modal-close" onclick="closeModal('rename-week-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="rename-week-label">New week number</label>
+      <input class="form-input" id="rename-week-input" type="number" min="1" max="999" style="font-size:20px;text-align:center;font-weight:700">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="confirmRenameWeek()" style="margin-top:8px">
+      ✅ Save
+    </button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
