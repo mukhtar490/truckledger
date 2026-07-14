@@ -1043,7 +1043,6 @@ async function renderHistory() {
         <button class="btn btn-ghost btn-sm" onclick="showWeekDetail('${w.id}')">📋 ${currentLang==='ar'?'التفاصيل':currentLang==='ru'?'Детали':'Details'}</button>
         <button class="btn btn-success btn-sm" onclick="editWeekModal('${w.id}', ${w.weekNum})">✏️ ${currentLang==='ar'?'تعديل':currentLang==='ru'?'Изменить':'Edit'}</button>
         <button class="btn btn-ghost btn-sm" onclick="renameWeek('${w.id}', ${w.weekNum})">🔢 ${currentLang==='ar'?'رقم':currentLang==='ru'?'№':'#'}</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteWeek('${w.id}', ${w.weekNum})">🗑️</button>
         <button class="btn btn-primary btn-sm" onclick="exportPDF('${w.id}', ${w.weekNum})">📄</button>
       </div>
     </div>`;
@@ -1383,36 +1382,6 @@ window.confirmRenameWeek = async () => {
     renderAll();
   } catch(e) {
     showToast('Error: ' + e.message);
-  }
-};
-
-window.deleteWeek = async (wId, wNum) => {
-  const isAr = currentLang === 'ar';
-  const isRu = currentLang === 'ru';
-  const weekLabel = isAr ? `الأسبوع ${wNum}` : isRu ? `Неделя ${wNum}` : `Week ${wNum}`;
-  const msg = isAr ? `هل تريد حذف ${weekLabel} بالكامل مع كل رحلاته ومصاريفه؟` :
-              isRu ? `Удалить ${weekLabel} со всеми данными?` :
-              `Delete ${weekLabel} with all its loads and expenses?`;
-
-  showToast(isAr ? `جاري حذف ${weekLabel}...` : `Deleting ${weekLabel}...`);
-
-  try {
-    // Delete all loads
-    const loadsSnap = await getDocs(collection(db, 'users', uid(), 'weeks', wId, 'loads'));
-    for (const l of loadsSnap.docs) await deleteDoc(l.ref);
-
-    // Delete all expenses  
-    const expSnap = await getDocs(collection(db, 'users', uid(), 'weeks', wId, 'expenses'));
-    for (const e of expSnap.docs) await deleteDoc(e.ref);
-
-    // Delete week
-    await deleteDoc(doc(db, 'users', uid(), 'weeks', wId));
-
-    showToast(isAr ? `✅ تم حذف ${weekLabel}` : isRu ? `✅ ${weekLabel} удалена` : `✅ ${weekLabel} deleted`);
-    renderAll();
-  } catch(e) {
-    console.error('Delete week error:', e);
-    showToast('Error: ' + (e.message || e.code || 'Unknown'));
   }
 };
 
