@@ -28,7 +28,7 @@ const db = getFirestore(app);
 
 // ── STATE ──
 let currentUser = null, currentWeekId = null, editLoadId = null, editExpenseId = null;
-let settings = { companyName:'', companyPct:0, driverPct:0, insurance:0, otherDeductions:0, weekStart:0, oilChangeMiles:0, oilChangeDone:0 };
+let settings = { companyName:'', companyPct:0, driverPct:0, driverPayMode:'percent', driverCpm:0, insurance:0, otherDeductions:0, weekStart:0, oilChangeMiles:0, oilChangeDone:0 };
 let lifetimeMiles = 0;
 let joinDate = null;
 let currentLang = localStorage.getItem('tl_lang') || 'en';
@@ -48,7 +48,7 @@ const T = {
     closedWeeks:'Closed Weeks', noWeeks:'No closed weeks yet', editWeek:'Edit Week', addLoadToWeek:'+ Add Load to Week', addExpToWeek:'+ Add Expense to Week', reopenWeek:'🔓 Reopen Week', weekReopened:'Week reopened ✓', weekClosed:'Week closed ✓',
     companyInfo:'Company Info', companyName:'Company Name', shownReports:'Shown in reports',
     fixedDeduct:'Fixed Deductions', companyCut:'Company % Cut', dispCarrier:'Dispatcher / Carrier %',
-    driverPay:'Driver Pay %', pctGross:'% of gross rate',
+    driverPay:'Driver Pay', pctGross:'% of gross rate', driverPayMode:'Payment Mode', driverPayPercent:'% of Gross Income', driverPayMile:'$ per Mile (CPM)', driverCpm:'Rate per Mile ($)', driverPayMileCalc:'per mile ×',
     insurance:'Insurance ($/wk)', flatWeekly:'Flat weekly fee',
     otherDeduct:'Other Deductions ($/wk)', escrow:'Escrow / Maintenance',
     weekSettings:'Week Settings', weekStartsOn:'Week Starts On',
@@ -97,7 +97,7 @@ const T = {
     closedWeeks:'الأسابيع المغلقة', noWeeks:'لا توجد أسابيع مغلقة بعد', editWeek:'تعديل الأسبوع', addLoadToWeek:'+ إضافة رحلة للأسبوع', addExpToWeek:'+ إضافة مصروف للأسبوع', reopenWeek:'🔓 إعادة فتح الأسبوع', weekReopened:'تم إعادة فتح الأسبوع ✓', weekClosed:'تم إغلاق الأسبوع ✓',
     companyInfo:'معلومات الشركة', companyName:'اسم الشركة', shownReports:'يظهر في التقارير',
     fixedDeduct:'الخصومات الثابتة', companyCut:'نسبة الشركة %', dispCarrier:'الناقل / المرسل %',
-    driverPay:'نسبة السائق %', pctGross:'% من إجمالي السعر',
+    driverPay:'أجر السائق', pctGross:'% من إجمالي السعر', driverPayMode:'طريقة الدفع', driverPayPercent:'% من الدخل الإجمالي', driverPayMile:'$ لكل ميل (CPM)', driverCpm:'السعر لكل ميل ($)', driverPayMileCalc:'لكل ميل ×',
     insurance:'التأمين ($/أسبوع)', flatWeekly:'رسوم أسبوعية ثابتة',
     otherDeduct:'خصومات أخرى ($/أسبوع)', escrow:'الضمان / الصيانة',
     weekSettings:'إعدادات الأسبوع', weekStartsOn:'يبدأ الأسبوع في',
@@ -146,7 +146,7 @@ const T = {
     closedWeeks:'Закрытые Недели', noWeeks:'Нет закрытых недель', editWeek:'Редактировать', addLoadToWeek:'+ Добавить Рейс', addExpToWeek:'+ Добавить Расход', reopenWeek:'🔓 Открыть Неделю', weekReopened:'Неделя открыта ✓', weekClosed:'Неделя закрыта ✓',
     companyInfo:'Информация о Компании', companyName:'Название Компании', shownReports:'В отчётах',
     fixedDeduct:'Фиксированные Вычеты', companyCut:'% Компании', dispCarrier:'% Диспетчера',
-    driverPay:'% Водителя', pctGross:'% от валового дохода',
+    driverPay:'Оплата Водителя', pctGross:'% от валового дохода', driverPayMode:'Режим оплаты', driverPayPercent:'% от валового дохода', driverPayMile:'$ за Милю (CPM)', driverCpm:'Ставка за Милю ($)', driverPayMileCalc:'за милю ×',
     insurance:'Страховка ($/нед)', flatWeekly:'Фиксированная недельная плата',
     otherDeduct:'Другие Вычеты ($/нед)', escrow:'Депозит / Обслуживание',
     weekSettings:'Настройки Недели', weekStartsOn:'Начало недели',
@@ -533,6 +533,8 @@ window.saveSettings = async () => {
   settings.companyName = document.getElementById('set-company').value;
   settings.companyPct = parseFloat(document.getElementById('set-company-pct').value)||0;
   settings.driverPct = parseFloat(document.getElementById('set-driver-pct').value)||0;
+  settings.driverPayMode = document.getElementById('set-driver-mode')?.value || 'percent';
+  settings.driverCpm = parseFloat(document.getElementById('set-driver-cpm').value)||0;
   settings.insurance = parseFloat(document.getElementById('set-insurance').value)||0;
   settings.otherDeductions = parseFloat(document.getElementById('set-other').value)||0;
   settings.weekStart = parseInt(document.getElementById('set-week-start').value)||0;
@@ -545,6 +547,11 @@ function applySettingsToUI() {
   document.getElementById('set-company').value = settings.companyName||'';
   document.getElementById('set-company-pct').value = settings.companyPct||'';
   document.getElementById('set-driver-pct').value = settings.driverPct||'';
+  const modeEl = document.getElementById('set-driver-mode');
+  if (modeEl) modeEl.value = settings.driverPayMode||'percent';
+  const cpmEl = document.getElementById('set-driver-cpm');
+  if (cpmEl) cpmEl.value = settings.driverCpm||'';
+  toggleDriverPayMode(settings.driverPayMode||'percent');
   document.getElementById('set-insurance').value = settings.insurance||'';
   document.getElementById('set-other').value = settings.otherDeductions||'';
   document.getElementById('set-week-start').value = settings.weekStart||0;
@@ -606,7 +613,10 @@ async function calcWeek(wId) {
   const grossIncome = loads.reduce((s,l)=>s+(l.rate||0)+(l.detention||0)+(l.layover||0),0);
   const totalExpenses = expenses.reduce((s,e)=>s+(e.amount||0),0);
   const companyDeduct = grossIncome*(settings.companyPct/100);
-  const driverDeduct = grossIncome*(settings.driverPct/100);
+  const totalMilesWeek = loads.reduce((s,l)=>s+(l.miles||0),0);
+  const driverDeduct = settings.driverPayMode==='mile'
+    ? totalMilesWeek * (settings.driverCpm||0)
+    : grossIncome*(settings.driverPct/100);
   const insuranceDeduct = settings.insurance;
   const otherDeduct = settings.otherDeductions;
   const totalDeductions = companyDeduct+driverDeduct+insuranceDeduct+otherDeduct;
@@ -885,20 +895,25 @@ function renderDriverPay(data) {
   if (!card) return;
 
   const driverPct = settings.driverPct || 0;
+  const driverCpm = settings.driverCpm || 0;
+  const driverMode = settings.driverPayMode || 'percent';
+  const isMile = driverMode === 'mile';
+  const totalMiles = data.loads.reduce((s,l)=>s+(l.miles||0),0);
 
-  if (driverPct <= 0) {
+  if ((isMile && driverCpm <= 0) || (!isMile && driverPct <= 0)) {
     card.style.display = 'none';
     return;
   }
 
   card.style.display = 'block';
-  const driverPay = data.grossIncome * (driverPct / 100);
+  const driverPay = isMile ? totalMiles * driverCpm : data.grossIncome * (driverPct / 100);
+  const badge = isMile ? '$'+driverCpm+'/mi' : driverPct+'%';
 
   // Update values
   document.getElementById('driver-pay-amount').textContent = fmt(driverPay);
-  document.getElementById('driver-pay-pct-badge').textContent = driverPct + '%';
-  document.getElementById('driver-pay-gross').textContent = fmt(data.grossIncome);
-  document.getElementById('driver-pay-pct-val').textContent = driverPct + '%';
+  document.getElementById('driver-pay-pct-badge').textContent = badge;
+  document.getElementById('driver-pay-gross').textContent = isMile ? totalMiles.toLocaleString('en-US')+' mi' : fmt(data.grossIncome);
+  document.getElementById('driver-pay-pct-val').textContent = isMile ? '$'+driverCpm : driverPct+'%';
 
   // Update labels
   const lbw = document.getElementById('lbl-driver-pay-week');
@@ -906,9 +921,11 @@ function renderDriverPay(data) {
   const lg = document.getElementById('lbl-gross-base');
   const lp = document.getElementById('lbl-driver-pct-label');
   if (lbw) lbw.textContent = currentLang==='ar'?'💰 مرتب السائق هذا الأسبوع':currentLang==='ru'?'💰 Зарплата за Неделю':'💰 Driver Pay This Week';
-  if (lbc) lbc.textContent = currentLang==='ar' ? 'نسبة السائق: ' + driverPct + '% من إجمالي الدخل' : currentLang==='ru' ? 'Ставка: ' + driverPct + '% от валового дохода' : driverPct + '% of gross income';
-  if (lg) lg.textContent = t('grossIncome');
-  if (lp) lp.textContent = currentLang==='ar' ? 'نسبة السائق' : currentLang==='ru' ? 'Ставка водителя' : 'Driver %';
+  if (lbc) lbc.textContent = isMile
+    ? (currentLang==='ar'?`$${driverCpm} × ${totalMiles.toLocaleString('en-US')} ميل`:`$${driverCpm} × ${totalMiles.toLocaleString('en-US')} miles`)
+    : (currentLang==='ar'?`نسبة السائق: ${driverPct}% من إجمالي الدخل`:currentLang==='ru'?`Ставка: ${driverPct}%`:`${driverPct}% of gross income`);
+  if (lg) lg.textContent = isMile ? (currentLang==='ar'?'إجمالي الأميال':'Total Miles') : t('grossIncome');
+  if (lp) lp.textContent = isMile ? (currentLang==='ar'?'سعر الميل':'Rate/Mile') : (currentLang==='ar'?'نسبة السائق':currentLang==='ru'?'Ставка':'Driver %');
 }
 
 async function renderAll() {
@@ -1551,6 +1568,13 @@ window.switchTab = name => {
   else if (name==='expenses') { fab.style.display='flex'; fab.onclick=()=>openExpenseModal(); }
   else fab.style.display='none';
   if (name==='analytics') renderMonthly().catch(()=>{});
+};
+
+window.toggleDriverPayMode = (mode) => {
+  const pctRow = document.getElementById('driver-pct-row');
+  const cpmRow = document.getElementById('driver-cpm-row');
+  if (pctRow) pctRow.style.display = mode==='mile' ? 'none' : 'flex';
+  if (cpmRow) cpmRow.style.display = mode==='mile' ? 'flex' : 'none';
 };
 
 window.closeModal = id => document.getElementById(id).classList.remove('open');
@@ -2285,9 +2309,25 @@ select.form-input{appearance:none;}
         <div><div class="setting-label" id="sl-comp-cut">Company % Cut</div><div class="setting-sub" id="sl-disp">Dispatcher / Carrier %</div></div>
         <input class="setting-input" id="set-company-pct" type="number" placeholder="0" min="0" max="100" onchange="saveSettings()">
       </div>
-      <div class="setting-row">
-        <div><div class="setting-label" id="sl-driver">Driver Pay %</div><div class="setting-sub" id="sl-pct">% of gross rate</div></div>
-        <input class="setting-input" id="set-driver-pct" type="number" placeholder="0" min="0" max="100" onchange="saveSettings()">
+      <!-- Driver Pay Mode Toggle -->
+      <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
+          <div><div class="setting-label" id="sl-driver">Driver Pay</div><div class="setting-sub" id="sl-pct">Payment method</div></div>
+          <select class="setting-input" id="set-driver-mode" onchange="saveSettings();toggleDriverPayMode(this.value)" style="width:110px">
+            <option value="percent">% Gross</option>
+            <option value="mile">$/Mile (CPM)</option>
+          </select>
+        </div>
+        <!-- Percent mode -->
+        <div id="driver-pct-row" style="width:100%;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;color:var(--text2)">% of gross income</div>
+          <input class="setting-input" id="set-driver-pct" type="number" placeholder="0" min="0" max="100" onchange="saveSettings()">
+        </div>
+        <!-- CPM mode -->
+        <div id="driver-cpm-row" style="width:100%;display:flex;justify-content:space-between;align-items:center;display:none">
+          <div style="font-size:12px;color:var(--text2)">$ per mile driven</div>
+          <input class="setting-input" id="set-driver-cpm" type="number" placeholder="0.00" min="0" step="0.01" onchange="saveSettings()">
+        </div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label" id="sl-ins">Insurance ($/wk)</div><div class="setting-sub" id="sl-flat">Flat weekly fee</div></div>
