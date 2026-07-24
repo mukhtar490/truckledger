@@ -975,7 +975,7 @@ function renderHome(data) {
   renderComparison(data).catch(()=>{});
 
   const rl = document.getElementById('home-recent-loads');
-  const recent = [...data.loads].slice(-3).reverse();
+  const recent = [...data.loads].sort((a,b)=>{ const na=parseInt(a.loadNumber)||0; const nb=parseInt(b.loadNumber)||0; return nb-na; }).slice(0,3);
   rl.innerHTML = recent.length ? recent.map(l=>loadCard(l,true)).join('')
     : `<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">${t('noRecentLoads')}</div></div>`;
 }
@@ -1021,7 +1021,7 @@ function renderLoads(loads) {
   const el = document.getElementById('loads-list');
   document.getElementById('lbl-week-loads').textContent = t('thisWeekLoads');
   document.getElementById('btn-add-load').textContent = t('addLoad');
-  el.innerHTML = loads.length ? [...loads].reverse().map(l=>loadCard(l)).join('')
+  el.innerHTML = loads.length ? [...loads].sort((a,b)=>{ const na=parseInt(a.loadNumber)||0; const nb=parseInt(b.loadNumber)||0; return nb-na; }).map(l=>loadCard(l)).join('')
     : `<div class="empty"><div class="empty-icon">🛣️</div><div class="empty-text">${t('noLoads')}</div></div>`;
 }
 
@@ -1029,7 +1029,7 @@ function renderExpenses(expenses) {
   const el = document.getElementById('expenses-list');
   document.getElementById('lbl-week-exp').textContent = t('thisWeekExp');
   document.getElementById('btn-add-exp').textContent = t('addExp');
-  el.innerHTML = expenses.length ? [...expenses].reverse().map(e=>expenseCard(e)).join('')
+  el.innerHTML = expenses.length ? [...expenses].sort((a,b)=>{ if(a.date&&b.date) return b.date.localeCompare(a.date); return 0; }).map(e=>expenseCard(e)).join('')
     : `<div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">${t('noExpenses')}</div></div>`;
 }
 
@@ -1039,7 +1039,7 @@ async function renderHistory() {
   const oilTitle = document.getElementById('lbl-oil-title');
   if (oilTitle) oilTitle.textContent = t('oilChangeTitle');
   const snap = await getDocs(weeksRef());
-  const closed = snap.docs.filter(d=>d.data().status==='closed').map(d=>({id:d.id,...d.data()})).reverse();
+  const closed = snap.docs.filter(d=>d.data().status==='closed').map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.weekNum-a.weekNum);
   if (!closed.length) { el.innerHTML = `<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">${t('noWeeks')}</div></div>`; return; }
   let html = '';
   for (const w of closed) {
